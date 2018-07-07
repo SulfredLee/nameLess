@@ -5,9 +5,10 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 #include <iostream>
 
-#include "multicast.h"
+#include "MultiCast.h"
 
 Multicast::Multicast()
 {
@@ -15,9 +16,10 @@ Multicast::Multicast()
 
 Multicast::~Multicast()
 {
+    Stop();
 }
 
-Multicast::MCStatus Multicast::InitComponent(const std::string& ifAddress, const int ifPort)
+Multicast::MCStatus Multicast::InitComponent(const std::string& ifAddress, const short ifPort)
 {
     m_ifAddress = ifAddress;
     m_ifPort = ifPort;
@@ -130,7 +132,7 @@ Multicast::MCStatus Multicast::SelectRead(long usec, long sec)
         ptm = NULL;
     else
         ptm = &tm;
-    if ((ret = select(m_socket + 1, &fdread, NULL, NULL, ptm)) >= 0)
+    if ((ret = select(0, &fdread, NULL, NULL, ptm)) >= 0)
     {
         if (FD_ISSET(m_socket, &fdread))
         {
@@ -150,16 +152,17 @@ Multicast::MCStatus Multicast::SelectRead(long usec, long sec)
 
 Multicast::MCStatus Multicast::Recv(std::vector<char>& receiveBuffer, std::string& fromAddress, short& fromPort, int& byteRecv)
 {
-    struct sockaddr_in remote_addr;
-    int addressLength = sizeof(sockaddr_in);
-    byteRecv = recvfrom(m_socket, &receiveBuffer[0], receiveBuffer.size(), 0, (sockaddr*)&remote_addr, (socklen_t*)&addressLength);
+    struct sockaddr_in remoteInfo;
+    int infoLength = sizeof(remoteInfo);
+    memset(&remoteInfo, 0, infoLength);
+    byteRecv = recvfrom(m_socket, &receiveBuffer[0], receiveBuffer.size(), 0, (sockaddr*)&remoteInfo, (socklen_t*)&infoLength);
     if (byteRecv <= 0)
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << " byteRecv: " << byteRecv << std::endl;
         return MCStatus::ERROR;
     }
-    fromAddress = inet_ntoa(remote_addr.sin_addr);
-    fromPort = ntohs(remote_addr.sin_port);
+    fromAddress = inet_ntoa(remoteInfo.sin_addr);
+    fromPort = ntohs(remoteInfo.sin_port);
 
     return MCStatus::SUCCESS;
 }
@@ -174,14 +177,14 @@ Multicast::MCStatus Multicast::SetTTL(int ttl)
     return MCStatus::SUCCESS;
 }
 
-Multicast::MCStatus Multicast::Send(const std::string& toAddress, const std::vector<char>& sendMsg)
+Multicast::MCStatus Multicast::Send(const std::string& toAddress, const std::vector<char>& sendMsg, const int msgLength)
 {
     struct sockaddr_in group_addr;
 
     group_addr.sin_family = AF_INET;
     group_addr.sin_addr.s_addr = inet_addr(toAddress.c_str());
     group_addr.sin_port = htons(m_ifPort);
-    if (sendto(m_socket, &sendMsg[0], sendMsg.size(), 0, (sockaddr*)&group_addr, sizeof(group_addr)) != (int)sendMsg.size())
+    if (sendto(m_socket, &sendMsg[0], msgLength, 0, (sockaddr*)&group_addr, sizeof(group_addr)) != (int)sendMsg.size())
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
         return MCStatus::ERROR;

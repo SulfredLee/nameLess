@@ -11,8 +11,7 @@ class Multicast
     Multicast();
     virtual ~Multicast();
 
-    MCStatus InitComponent(const std::string& ifAddress, const int ifPort); // Initialize(), Start(), SetInterface()
-    void Stop();
+    MCStatus InitComponent(const std::string& ifAddress, const short ifPort);
 
     // Client
     // Join the multicast group to receive datagrams.
@@ -27,13 +26,15 @@ class Multicast
     // Set time to live
     MCStatus SetTTL(int ttl);
     // Send a message to the multicasting address with specified port.
-    MCStatus Send(const std::string& toAddress, const std::vector<char>& sendMsg);
+    MCStatus Send(const std::string& toAddress, const std::vector<char>& sendMsg, const int msgLength);
  private:
     int m_socket;
     std::string m_ifAddress;
-    int m_ifPort;
+    short m_ifPort;
+    bool m_isClient;
  private:
     MCStatus Start();
+    void Stop();
 };
 
 #endif

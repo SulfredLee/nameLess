@@ -1,8 +1,12 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
-#include "multicast.h"
+#include <unistd.h>
+#include <string.h>
+
+#include "MultiCast.h"
 
 int main(int argc, char* argv[])
 {
@@ -24,12 +28,11 @@ int main(int argc, char* argv[])
                 if (MCast.Recv(receivedData, fromAddress, fromPort, byteRecv) == Multicast::MCStatus::SUCCESS)
                 {
                     int count;
-                    std::copy(receivedData.begin(), receivedData.begin() + sizeof(int), &count);
+                    memcpy(&count, &receivedData[0], sizeof(int));
                     std::cout << "Received from " << fromAddress << ":" << fromPort << " count: " << count << std::endl;
                 }
             }
         }
-        MCast.Stop();
     }
     return 0;
 }
