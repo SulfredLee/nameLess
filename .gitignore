@@ -1,8 +1,7 @@
 debug/
 release/
 build/
-cscope.files
-cscope.out
+cscope.*
 GPATH
 GRTAGS
 GTAGS
