@@ -91,10 +91,7 @@ message(STATUS "Info - libpcap include path: ${libpcap_INCLUDE_DIR}")
 add_subdirectory(network)
 add_subdirectory(utility)
 # applications
-add_subdirectory(multicastReceiver)
-add_subdirectory(multicastSender)
-add_subdirectory(tcpClient)
-add_subdirectory(tcpServer)
+add_subdirectory(example)
 
 # build a CPack driven installer package
 include (InstallRequiredSystemLibraries)

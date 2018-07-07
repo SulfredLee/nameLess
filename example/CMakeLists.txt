@@ -1,0 +1,4 @@
+add_subdirectory(multicastReceiver)
+add_subdirectory(multicastSender)
+add_subdirectory(tcpClient)
+add_subdirectory(tcpServer)
