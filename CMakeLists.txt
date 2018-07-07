@@ -89,6 +89,7 @@ message(STATUS "Info - libpcap include path: ${libpcap_INCLUDE_DIR}")
 # Sub-directories where more CMakeLists.txt exist
 # libraries
 add_subdirectory(network)
+add_subdirectory(utility)
 # applications
 add_subdirectory(multicastReceiver)
 add_subdirectory(multicastSender)
