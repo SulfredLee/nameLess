@@ -24,14 +24,15 @@ TCPCast::~TCPCast()
 TCPCast::TCPStatus TCPCast::InitComponent(const std::string& ifAddress, const short ifPort, bool isClient, const int numClients)
 {
     m_ifAddress = m_ifAddress;
-    m_ifPort = ifPort;
     m_isClient = isClient;
     if (m_isClient)
     {
+        m_ifPort = 0;
         m_numClients = 0;
     }
     else
     {
+        m_ifPort = ifPort;
         m_numClients = numClients;
     }
     return Start();
@@ -40,7 +41,7 @@ TCPCast::TCPStatus TCPCast::InitComponent(const std::string& ifAddress, const sh
 TCPCast::TCPStatus TCPCast::Start()
 {
     // create TCP socket
-    if ((m_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    if ((m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0)
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
         return TCPStatus::ERROR;
@@ -49,14 +50,7 @@ TCPCast::TCPStatus TCPCast::Start()
     struct sockaddr_in local_addr;
     local_addr.sin_family = AF_INET;
     local_addr.sin_port = htons(m_ifPort);
-    if (m_ifAddress == "")
-    {
-        local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    }
-    else
-    {
-        local_addr.sin_addr.s_addr = inet_addr(m_ifAddress.c_str());
-    }
+    local_addr.sin_addr.s_addr = m_ifAddress == "" ? htonl(INADDR_ANY) : inet_addr(m_ifAddress.c_str());
     if (!m_isClient) // do binding if the socket need to listen incoming message
     {
         // bind local address
@@ -65,12 +59,12 @@ TCPCast::TCPStatus TCPCast::Start()
             std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
             return TCPStatus::ERROR;
         }
-        // set receive buffer size
-        int recevBufSize = 1024 * 256; // 256 kByte
-        setsockopt(m_socket, SOL_SOCKET, SO_RCVBUF, (char *)&recevBufSize, sizeof(recevBufSize));
         // get ready the server
         listen(m_socket, m_numClients);
     }
+    // set receive buffer size
+    int recevBufSize = 1024 * 256; // 256 kByte
+    setsockopt(m_socket, SOL_SOCKET, SO_RCVBUF, (char *)&recevBufSize, sizeof(recevBufSize));
     return TCPStatus::SUCCESS;
 }
 
