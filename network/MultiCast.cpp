@@ -29,7 +29,7 @@ Multicast::MCStatus Multicast::InitComponent(const std::string& ifAddress, const
 Multicast::MCStatus Multicast::Start()
 {
     // create UDP socket
-    if ((m_socket = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    if ((m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
         return MCStatus::ERROR;
@@ -38,17 +38,8 @@ Multicast::MCStatus Multicast::Start()
     struct sockaddr_in local_addr;
     local_addr.sin_family = AF_INET;
     local_addr.sin_port = htons(m_ifPort);
-    if (m_ifAddress == "")
-    {
-        local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    }
-    else
-    {
-        unsigned long addr = inet_addr(m_ifAddress.c_str());
-        local_addr.sin_addr.s_addr = addr;
-        // set local interface
-        setsockopt(m_socket, IPPROTO_IP, IP_MULTICAST_IF, (char *)&addr, sizeof(addr));
-    }
+    local_addr.sin_addr.s_addr = m_ifAddress == "" ? htonl(INADDR_ANY) : inet_addr(m_ifAddress.c_str());
+    setsockopt(m_socket, IPPROTO_IP, IP_MULTICAST_IF, (char *)&local_addr.sin_addr.s_addr, sizeof(local_addr.sin_addr.s_addr));
     // allow multiple sockets to use the same PORT number
     u_int yes=1;
     if (setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
