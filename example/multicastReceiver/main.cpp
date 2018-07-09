@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "MultiCast.h"
+#include "Logger.h"
 
 int main(int argc, char* argv[])
 {
@@ -29,7 +30,7 @@ int main(int argc, char* argv[])
                 {
                     int count;
                     memcpy(&count, &receivedData[0], sizeof(int));
-                    std::cout << "Received from " << fromAddress << ":" << fromPort << " count: " << count << std::endl;
+                    LOGMSG_INFO("Received from %s:%u count: %d", fromAddress.c_str(), fromPort, count);
                 }
             }
         }

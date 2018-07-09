@@ -7,31 +7,33 @@
 #include <string.h>
 
 #include "UDPCast.h"
+#include "Logger.h"
 
 int main(int argc, char* argv[])
 {
     std::vector<char> sendData;
     std::vector<char> recvData;
     UDPCast udpClient;
-    if (udpClient.InitComponent("192.168.0.110", 8899, true) == UDPCast::UDPStatus::SUCCESS)
+
+    if (udpClient.InitComponent("192.168.0.112", 8899, true) == UDPCast::UDPStatus::SUCCESS)
     {
         sendData.resize(4);
         recvData.resize(4);
         int count = 2000;
         while (true)
         {
-            std::string serverAddress = "192.168.0.110";
+            std::string serverAddress = "192.168.0.112";
             short serverPort = 7788;
 
             memcpy(&sendData[0], &count, sizeof(int));
             UDPCast::UDPStatus retStatus = udpClient.Send(serverAddress, serverPort, sendData, sizeof(int));
             if (retStatus == UDPCast::UDPStatus::SUCCESS)
             {
-                std::cout << "Send success! count: " << count << std::endl;
+                LOGMSG_INFO("Send success! count: %d", count);
             }
             else
             {
-                std::cout << "Send fail!" << std::endl;
+                LOGMSG_ERROR("Send fail!");
             }
             count++;
 
@@ -41,7 +43,7 @@ int main(int argc, char* argv[])
             {
                 int countRecv;
                 memcpy(&countRecv, &recvData[0], sizeof(int));
-                std::cout << "Received count: " << countRecv << std::endl;
+                LOGMSG_INFO("Received count: %d", countRecv);
             }
             usleep(1000000); // 1 sec
         }

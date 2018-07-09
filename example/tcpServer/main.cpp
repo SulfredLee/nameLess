@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "TCPCast.h"
+#include "Logger.h"
 
 int main(int argc, char* argv[])
 {
@@ -25,11 +26,11 @@ int main(int argc, char* argv[])
             TCPCast::TCPStatus retStatus = tcpServer.ServerSend(clientHandle, sendData, sizeof(int));
             if (retStatus == TCPCast::TCPStatus::SUCCESS)
             {
-                std::cout << "Send success! count: " << count << std::endl;
+                LOGMSG_INFO("Send success! count: %d", count);
             }
             else
             {
-                std::cout << "Send fail!" << std::endl;
+                LOGMSG_ERROR("Send fail!");
             }
             count++;
 
@@ -39,14 +40,14 @@ int main(int argc, char* argv[])
             {
                 int countRecv = -1;
                 memcpy(&countRecv, &recvData[0], sizeof(int));
-                std::cout << "Received count: " << countRecv << " byteRecv: " << byteRecv << std::endl;
+                LOGMSG_INFO("Received count: %d byteRecv: %d", countRecv, byteRecv);
             }
             usleep(1000000); // 1 sec
         }
     }
     else
     {
-        std::cerr << __FUNCTION__ << ":" << __LINE__ << " Cannot InitComponent" << std::endl;
+        LOGMSG_ERROR("Cannot InitComponent");
     }
     return 0;
 }

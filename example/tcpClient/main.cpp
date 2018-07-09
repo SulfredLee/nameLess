@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "TCPCast.h"
+#include "Logger.h"
 
 int main(int argc, char* argv[])
 {
@@ -28,18 +29,18 @@ int main(int argc, char* argv[])
                 {
                     int countRecv;
                     memcpy(&countRecv, &recvData[0], sizeof(int));
-                    std::cout << "Received count: " << countRecv << std::endl;
+                    LOGMSG_INFO("Received count: %d", countRecv);
                 }
 
                 memcpy(&sendData[0], &count, sizeof(int));
                 retStatus = tcpClient.ClientSend(sendData, sizeof(int));
                 if (retStatus == TCPCast::TCPStatus::SUCCESS)
                 {
-                    std::cout << "Send success! count: " << count << std::endl;
+                    LOGMSG_INFO("Send success! count: %d", count);
                 }
                 else
                 {
-                    std::cout << "Send fail!" << std::endl;
+                    LOGMSG_ERROR("Send fail!");
                 }
                 count++;
                 usleep(1000000); // 1 sec

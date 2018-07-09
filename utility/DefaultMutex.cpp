@@ -1,0 +1,33 @@
+#include "DefaultMutex.h"
+
+DefaultMutex::DefaultMutex()
+{
+    pthread_mutexattr_settype(&m_Attr, PTHREAD_MUTEX_DEFAULT);
+    pthread_mutex_init(&m_Mutex, &m_Attr);
+}
+
+DefaultMutex::~DefaultMutex()
+{
+    pthread_mutex_destroy(&m_Mutex);
+}
+
+void DefaultMutex::Lock()
+{
+    pthread_mutex_lock(&m_Mutex);
+}
+
+void DefaultMutex::Unlock()
+{
+    pthread_mutex_unlock(&m_Mutex);
+}
+
+DefaultLock::DefaultLock(DefaultMutex* pDefaultMutex)
+{
+    m_pDefaultMutex = pDefaultMutex;
+    m_pDefaultMutex->Lock();
+}
+
+DefaultLock::~DefaultLock()
+{
+    m_pDefaultMutex->Unlock();
+}

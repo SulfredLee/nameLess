@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "MultiCast.h"
+#include "Logger.h"
 
 int main(int argc, char* argv[])
 {
@@ -24,11 +25,11 @@ int main(int argc, char* argv[])
             Multicast::MCStatus retStatus = MCast.Send(toAddress, sendData, sizeof(int));
             if (retStatus == Multicast::MCStatus::SUCCESS)
             {
-                std::cout << "Send success! count: " << count << std::endl;
+                LOGMSG_INFO("Send success! count: %d", count);
             }
             else
             {
-                std::cout << "Send fail!" << std::endl;
+                LOGMSG_ERROR("Send fail!");
             }
             count++;
             usleep(1000000); // 1 sec
