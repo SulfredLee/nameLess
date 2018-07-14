@@ -77,32 +77,65 @@ endif ()
 message(STATUS "Info - CMAKE_THREAD_LIBS_INIT: ${CMAKE_THREAD_LIBS_INIT}")
 
 # Handle pcap libaries
+message(STATUS "Info - preparing for pcap -------------------------")
 if (UNIX)
   set(libpcap_ROOT "/usr/local/libpcap/1.8.1/")
 else ()
   set(libpcap_ROOT "C:\\WpdPack\\4.1.2\\")
 endif ()
-set(libpcap_INCLUDE_DIR "${libpcap_ROOT}include")
-set(libpcap_LIBRARY_DIR "${libpcap_ROOT}lib")
+find_path(libpcap_INCLUDE_DIR pcap.h
+  PATHS ${libpcap_ROOT}include
+  DOC "Path where pcap includes can be found")
+find_library(pcap_LIBRARY NAMES pcap PATH_SUFFIXES lib64 lib
+  PATHS ${libpcap_ROOT}lib
+  DOC "Path where the pcap library can be found")
+get_filename_component(libpcap_LIBRARY_DIR "${pcap_LIBRARY}" PATH)
+if (NOT EXISTS ${libpcap_LIBRARY_DIR} AND ${libpcap_INCLUDE_DIR})
+    message(FATAL_ERROR "Cannot find pcap development resourse")
+    return()
+endif()
 message(STATUS "Info - libpcap include path: ${libpcap_INCLUDE_DIR}")
+message(STATUS "Info - libpcap library path: ${libpcap_LIBRARY_DIR}")
 
 # Handle jwt libaries
+message(STATUS "Info - preparing for jwt -------------------------")
 if (UNIX)
   set(libjwt_ROOT "/usr/local/jwt-cpp/")
 else ()
 endif ()
-set(libjwt_INCLUDE_DIR "${libjwt_ROOT}include")
-set(libjwt_LIBRARY_DIR "${libjwt_ROOT}lib")
+find_path(libjwt_INCLUDE_DIR jwt/jwt.h
+  PATHS ${libjwt_ROOT}include
+  DOC "Path where jwt includes can be found")
+find_library(jwt_LIBRARY NAMES jwt PATH_SUFFIXES lib64 lib
+  PATHS ${libjwt_ROOT}lib
+  DOC "Path where the jwt library can be found")
+get_filename_component(libjwt_LIBRARY_DIR "${jwt_LIBRARY}" PATH)
+if (NOT EXISTS ${libjwt_LIBRARY_DIR} AND ${libjwt_INCLUDE_DIR})
+    message(FATAL_ERROR "Cannot find jwt development resourse")
+    return()
+endif()
 message(STATUS "Info - libjwt include path: ${libjwt_INCLUDE_DIR}")
+message(STATUS "Info - libjwt library path: ${libjwt_LIBRARY_DIR}")
 
 # Handle openssl libaries
+message(STATUS "Info - preparing for openssl -------------------------")
 if (UNIX)
   set(libopenssl_ROOT "/usr/local/openssl/1.1/")
 else ()
 endif ()
-set(libopenssl_INCLUDE_DIR "${libopenssl_ROOT}include")
-set(libopenssl_LIBRARY_DIR "${libopenssl_ROOT}lib")
+find_path(libopenssl_INCLUDE_DIR openssl/ssl.h
+  PATHS ${libopenssl_ROOT}include
+  DOC "Path where openssl includes can be found")
+find_library(openssl_LIBRARY NAMES crypto ssl PATH_SUFFIXES lib64 lib
+  PATHS ${libopenssl_ROOT}lib
+  DOC "Path where the openssl library can be found")
+get_filename_component(libopenssl_LIBRARY_DIR "${openssl_LIBRARY}" PATH)
+if (NOT EXISTS ${libopenssl_LIBRARY_DIR} AND ${libopenssl_INCLUDE_DIR})
+    message(FATAL_ERROR "Cannot find openssl development resourse")
+    return()
+endif()
 message(STATUS "Info - libopenssl include path: ${libopenssl_INCLUDE_DIR}")
+message(STATUS "Info - libopenssl library path: ${libopenssl_LIBRARY_DIR}")
 
 # Sub-directories where more CMakeLists.txt exist
 # libraries
