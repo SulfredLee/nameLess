@@ -88,7 +88,7 @@ message(STATUS "Info - libpcap include path: ${libpcap_INCLUDE_DIR}")
 
 # Handle jwt libaries
 if (UNIX)
-  set(libjwt_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/jwt-cpp/")
+  set(libjwt_ROOT "/usr/local/jwt-cpp/")
 else ()
 endif ()
 set(libjwt_INCLUDE_DIR "${libjwt_ROOT}include")
@@ -97,7 +97,7 @@ message(STATUS "Info - libjwt include path: ${libjwt_INCLUDE_DIR}")
 
 # Handle openssl libaries
 if (UNIX)
-  set(libopenssl_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/openssl/1.1.1/")
+  set(libopenssl_ROOT "/usr/local/openssl/1.1/")
 else ()
 endif ()
 set(libopenssl_INCLUDE_DIR "${libopenssl_ROOT}include")

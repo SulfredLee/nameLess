@@ -9,6 +9,7 @@ file(GLOB ${folderName}_src
 
 include_directories(${PROJECT_SOURCE_DIR}/network
   ${libjwt_INCLUDE_DIR}
+  ${libopenssl_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(${targetName} ${${folderName}_src})
@@ -16,7 +17,7 @@ add_executable(${targetName} ${${folderName}_src})
 
 target_link_libraries(${targetName}
   ${libjwt_LIBRARY_DIR}/libjwt.a
-  /usr/lib/x86_64-linux-gnu/libcrypto.so)
+  ${libopenssl_LIBRARY_DIR}/libcrypto.so)
 
 # Creates a folder "executables" and adds target
 # project (*.vcproj) under it
