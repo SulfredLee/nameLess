@@ -86,12 +86,31 @@ set(libpcap_INCLUDE_DIR "${libpcap_ROOT}include")
 set(libpcap_LIBRARY_DIR "${libpcap_ROOT}lib")
 message(STATUS "Info - libpcap include path: ${libpcap_INCLUDE_DIR}")
 
+# Handle jwt libaries
+if (UNIX)
+  set(libjwt_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/jwt-cpp/")
+else ()
+endif ()
+set(libjwt_INCLUDE_DIR "${libjwt_ROOT}include")
+set(libjwt_LIBRARY_DIR "${libjwt_ROOT}lib")
+message(STATUS "Info - libjwt include path: ${libjwt_INCLUDE_DIR}")
+
+# Handle openssl libaries
+if (UNIX)
+  set(libopenssl_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/openssl/1.1.1/")
+else ()
+endif ()
+set(libopenssl_INCLUDE_DIR "${libopenssl_ROOT}include")
+set(libopenssl_LIBRARY_DIR "${libopenssl_ROOT}lib")
+message(STATUS "Info - libopenssl include path: ${libopenssl_INCLUDE_DIR}")
+
 # Sub-directories where more CMakeLists.txt exist
 # libraries
 add_subdirectory(network)
 add_subdirectory(utility)
 # applications
 add_subdirectory(example)
+add_subdirectory(jwtLearn)
 
 # build a CPack driven installer package
 include (InstallRequiredSystemLibraries)
