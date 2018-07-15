@@ -144,6 +144,7 @@ add_subdirectory(utility)
 # applications
 add_subdirectory(example)
 add_subdirectory(jwtLearn)
+add_subdirectory(jwtRemake)
 
 # build a CPack driven installer package
 include (InstallRequiredSystemLibraries)
