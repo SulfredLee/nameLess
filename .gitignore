@@ -1,6 +1,7 @@
 debug/
 release/
 build/
+third_party/
 cscope.*
 GPATH
 GRTAGS
