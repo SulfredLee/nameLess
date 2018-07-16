@@ -11,10 +11,13 @@ apps+=jwt-cpp
 apps+=ninja
 apps+=ycmd
 apps+=spacemacs
+apps+=libjson
 
 all: apps
 
 boost: .boost
+
+libjson: .libjson
 
 opencv: .opencv
 
@@ -159,4 +162,16 @@ openssl: .openssl
 				..; \
 	make -j 4; \
 	sudo make install;
+	touch $@
+
+.libjson:
+	git clone https://github.com/vincenthz/libjson.git
+	sudo mkdir -p /usr/local/libjson/1.0.0/bin
+	sudo mkdir -p /usr/local/libjson/1.0.0/lib
+	sudo mkdir -p /usr/local/libjson/1.0.0/include
+	cd libjson; \
+	make -j 4; \
+	sudo cp jsonlint /usr/local/libjson/1.0.0/bin; \
+	sudo cp libjson.a libjson.so* /usr/local/libjson/1.0.0/lib; \
+	sudo cp json.h /usr/local/libjson/1.0.0/include;
 	touch $@
