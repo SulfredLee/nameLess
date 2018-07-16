@@ -121,19 +121,33 @@ message(STATUS "Info - libjwt library path: ${libjwt_LIBRARY_DIR}")
 message(STATUS "Info - preparing for openssl -------------------------")
 if (UNIX)
   set(libopenssl_ROOT "/usr/local/openssl/1.1/")
+  set(libopenssl_INCLUDE_DIR "${libopenssl_ROOT}include")
+  set(libopenssl_LIBRARY_DIR "${libopenssl_ROOT}lib")
 else ()
 endif ()
-find_path(libopenssl_INCLUDE_DIR openssl/ssl.h
-  PATHS ${libopenssl_ROOT}include
-  DOC "Path where openssl includes can be found")
-find_library(openssl_LIBRARY NAMES crypto ssl PATH_SUFFIXES lib64 lib
-  PATHS ${libopenssl_ROOT}lib
-  DOC "Path where the openssl library can be found")
-get_filename_component(libopenssl_LIBRARY_DIR "${openssl_LIBRARY}" PATH)
-if ("${libopenssl_LIBRARY_DIR}" STREQUAL "" OR "${libopenssl_INCLUDE_DIR}" STREQUAL "")
-    message(FATAL_ERROR "Cannot find openssl development resourse")
-    return()
-endif()
+# find_path(libopenssl_INCLUDE_DIR openssl/ssl.h
+#   PATHS ${libopenssl_ROOT}include
+#   NO_DEFAULT_PATH
+#   NO_CMAKE_ENVIRONMENT_PATH
+#   NO_CMAKE_PATH
+#   NO_SYSTEM_ENVIRONMENT_PATH
+#   NO_CMAKE_SYSTEM_PATH
+#   NO_CMAKE_FIND_ROOT_PATH
+#   DOC "Path where openssl includes can be found")
+# find_library(openssl_LIBRARY NAMES crypto ssl PATH_SUFFIXES lib64 lib
+#   PATHS ${libopenssl_ROOT}lib
+#   NO_DEFAULT_PATH
+#   NO_CMAKE_ENVIRONMENT_PATH
+#   NO_CMAKE_PATH
+#   NO_SYSTEM_ENVIRONMENT_PATH
+#   NO_CMAKE_SYSTEM_PATH
+#   NO_CMAKE_FIND_ROOT_PATH
+#   DOC "Path where the openssl library can be found")
+# get_filename_component(libopenssl_LIBRARY_DIR "${openssl_LIBRARY}" PATH)
+# if ("${libopenssl_LIBRARY_DIR}" STREQUAL "" OR "${libopenssl_INCLUDE_DIR}" STREQUAL "")
+#     message(FATAL_ERROR "Cannot find openssl development resourse")
+#     return()
+# endif()
 message(STATUS "Info - libopenssl include path: ${libopenssl_INCLUDE_DIR}")
 message(STATUS "Info - libopenssl library path: ${libopenssl_LIBRARY_DIR}")
 
