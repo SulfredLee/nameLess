@@ -145,6 +145,8 @@ add_subdirectory(utility)
 add_subdirectory(example)
 add_subdirectory(jwtLearn)
 add_subdirectory(jwtSigner)
+add_subdirectory(csv2json)
+add_subdirectory(json2csv)
 
 # build a CPack driven installer package
 include (InstallRequiredSystemLibraries)
