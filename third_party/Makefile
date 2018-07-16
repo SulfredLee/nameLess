@@ -141,7 +141,7 @@ openssl: .openssl
 	git clone https://github.com/openssl/openssl.git
 	sudo mkdir -p /usr/local/openssl/1.1
 	cd openssl; \
-	./configure --prefix=/usr/local/openssl/1.1; \
+	./config --prefix=/usr/local/openssl/1.1; \
 	make -j 4; \
 	sudo make install;
 	touch $@
