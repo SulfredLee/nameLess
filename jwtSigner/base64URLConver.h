@@ -1,5 +1,5 @@
-#ifndef BASE64_H
-#define BASE64_h
+#ifndef BASE64URLCONVERT_H
+#define BASE64URLCONVERT_h
 #include <string>
 
 class base64URLConvert

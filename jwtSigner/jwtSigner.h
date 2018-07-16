@@ -1,5 +1,5 @@
-#ifndef JWTREMAKE_H
-#define JWTREMAKE_H
+#ifndef JWTSIGNER_H
+#define JWTSIGNER_H
 #include <string>
 
 #include <openssl/opensslv.h>
@@ -20,7 +20,7 @@ class EVP_MD_CTX_RAII
     EVP_MD_CTX* m_ctx;
 };
 
-class JWT
+class JWTSigner
 {
  public:
     std::string DoRS256Signe(const std::string& header, const std::string& payload, const std::string& privateKeyFile);

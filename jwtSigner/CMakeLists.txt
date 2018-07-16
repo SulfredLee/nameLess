@@ -1,4 +1,4 @@
-set(targetName "jwtRemake")
+set(targetName "jwtSigner")
 get_filename_component(folderName ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 string(REPLACE " " "_" folderName ${folderName})
 

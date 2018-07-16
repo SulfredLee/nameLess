@@ -1,5 +1,5 @@
-#include "jwtRemake.h"
-#include "base64Conver.h"
+#include "jwtSigner.h"
+#include "base64URLConver.h"
 
 #include <string>
 #include <sstream>
@@ -21,7 +21,7 @@ EVP_MD_CTX* EVP_MD_CTX_RAII::get()
     return m_ctx;
 }
 
-std::string JWT::DoRS256Signe(const std::string& header, const std::string& payload, const std::string& privateKeyFile)
+std::string JWTSigner::DoRS256Signe(const std::string& header, const std::string& payload, const std::string& privateKeyFile)
 {
     std::string header_enc = base64URLConvert::encode(header);
     std::string payload_enc = base64URLConvert::encode(payload);
@@ -37,7 +37,7 @@ std::string JWT::DoRS256Signe(const std::string& header, const std::string& payl
     }
 }
 
-std::string JWT::fileToString(const std::string& fileName)
+std::string JWTSigner::fileToString(const std::string& fileName)
 {
     std::ifstream FH(fileName);
     std::stringstream buffer;
@@ -45,7 +45,7 @@ std::string JWT::fileToString(const std::string& fileName)
     return buffer.str();
 }
 
-std::string JWT::RS256Digest(const std::string& privateKeyFile, const std::string& signed_area)
+std::string JWTSigner::RS256Digest(const std::string& privateKeyFile, const std::string& signed_area)
 {
     std::string result;
 
@@ -77,7 +77,7 @@ std::string JWT::RS256Digest(const std::string& privateKeyFile, const std::strin
     return result;
 }
 
-EVP_PKEY* JWT::LoadKey(const char *key, bool public_key)
+EVP_PKEY* JWTSigner::LoadKey(const char *key, bool public_key)
 {
     EVP_PKEY *evp_pkey = NULL;
     BIO *keybio = !key || !*key ? NULL : BIO_new_mem_buf(const_cast<void *>(reinterpret_cast<const void *>(key)), -1);

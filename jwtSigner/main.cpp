@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include "jwtRemake.h"
-#include "base64Conver.h"
+#include "jwtSigner.h"
+#include "base64URLConver.h"
 
 int main(int argc, char* argv[])
 {
@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
     std::string payload = "{\"admin\":true,\"exp\":1531450366,\"iat\":1531446766,\"jti\":\"52748d98-3435-4b02-8ed1-d1cbf0974172\",\"name\":\"John\",\"sub\":\"1234567890\"}";
     std::string header = "{\"alg\":\"RS256\",\"typ\":\"JWT\"}";
 
-    JWT jwtEngine;
+    JWTSigner jwtEngine;
     std::cout << jwtEngine.DoRS256Signe(header, payload, privateKey) << std::endl;
     return 0;
 }
