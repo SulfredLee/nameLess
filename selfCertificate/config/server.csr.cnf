@@ -1,0 +1,14 @@
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha256
+distinguished_name = dn
+
+[dn]
+C=US
+ST=California
+L=Cupertino
+O=Sulfred, Inc.
+OU=Production CA
+emailAddress=support@sulfred.com
+CN=Production123
