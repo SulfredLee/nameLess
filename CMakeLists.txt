@@ -110,7 +110,7 @@ find_library(jwt_LIBRARY NAMES jwt PATH_SUFFIXES lib64 lib
   PATHS ${libjwt_ROOT}lib
   DOC "Path where the jwt library can be found")
 get_filename_component(libjwt_LIBRARY_DIR "${jwt_LIBRARY}" PATH)
-if (NOT EXISTS ${libjwt_LIBRARY_DIR} AND ${libjwt_INCLUDE_DIR})
+if ("${libjwt_LIBRARY_DIR}" STREQUAL "" OR "${libjwt_INCLUDE_DIR}" STREQUAL "")
     message(FATAL_ERROR "Cannot find jwt development resourse")
     return()
 endif()
@@ -130,7 +130,7 @@ find_library(openssl_LIBRARY NAMES crypto ssl PATH_SUFFIXES lib64 lib
   PATHS ${libopenssl_ROOT}lib
   DOC "Path where the openssl library can be found")
 get_filename_component(libopenssl_LIBRARY_DIR "${openssl_LIBRARY}" PATH)
-if (NOT EXISTS ${libopenssl_LIBRARY_DIR} AND ${libopenssl_INCLUDE_DIR})
+if ("${libopenssl_LIBRARY_DIR}" STREQUAL "" OR "${libopenssl_INCLUDE_DIR}" STREQUAL "")
     message(FATAL_ERROR "Cannot find openssl development resourse")
     return()
 endif()
