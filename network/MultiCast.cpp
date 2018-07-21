@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "MultiCast.h"
+#include "Logger.h"
 
 Multicast::Multicast()
 {
@@ -31,7 +32,7 @@ Multicast::MCStatus Multicast::Start()
     // create UDP socket
     if ((m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return MCStatus::ERROR;
     }
     // set address and port for local address
@@ -44,13 +45,13 @@ Multicast::MCStatus Multicast::Start()
     u_int yes=1;
     if (setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return MCStatus::ERROR;
     }
     // bind local address
     if (bind(m_socket, (struct sockaddr *)&local_addr, sizeof(local_addr)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return MCStatus::ERROR;
     }
     // set receive buffer size
@@ -85,7 +86,7 @@ Multicast::MCStatus Multicast::JoinGroup(const std::string& grpAddress)
     }
     if (setsockopt(m_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return MCStatus::ERROR;
     }
     return MCStatus::SUCCESS;
@@ -103,7 +104,7 @@ Multicast::MCStatus Multicast::LeaveGroup(const std::string& grpAddress)
     mreq.imr_interface.s_addr = inet_addr(grpAddress.c_str());
     if (setsockopt(m_socket, IPPROTO_IP, IP_DROP_MEMBERSHIP, (char *)&mreq, sizeof(mreq)) == -1)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return MCStatus::ERROR;
     }
     return MCStatus::SUCCESS;
@@ -136,7 +137,7 @@ Multicast::MCStatus Multicast::SelectRead(long usec, long sec)
     }
     else
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << " ret: " << ret << std::endl;
+        LOGMSG_ERROR("errono: %s ret: %d", strerror(errno), ret);
         return MCStatus::ERROR;
     }
 }
@@ -149,7 +150,7 @@ Multicast::MCStatus Multicast::Recv(std::vector<char>& receiveBuffer, std::strin
     byteRecv = recvfrom(m_socket, &receiveBuffer[0], receiveBuffer.size(), 0, (sockaddr*)&remoteInfo, (socklen_t*)&infoLength);
     if (byteRecv <= 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << " byteRecv: " << byteRecv << std::endl;
+        LOGMSG_ERROR("errono: %s byteRecv: %d", strerror(errno), byteRecv);
         return MCStatus::ERROR;
     }
     fromAddress = inet_ntoa(remoteInfo.sin_addr);
@@ -162,7 +163,7 @@ Multicast::MCStatus Multicast::SetTTL(int ttl)
 {
     if (setsockopt(m_socket, IPPROTO_IP, IP_MULTICAST_TTL, (char *)&ttl, sizeof(ttl)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << " ttl: " << ttl << std::endl;
+        LOGMSG_ERROR("errono: %s ttl: %d", strerror(errno), ttl);
         return MCStatus::ERROR;
     }
     return MCStatus::SUCCESS;
@@ -177,7 +178,7 @@ Multicast::MCStatus Multicast::Send(const std::string& toAddress, char const * c
     group_addr.sin_port = htons(m_ifPort);
     if (sendto(m_socket, sendMsg, msgLength, 0, (sockaddr*)&group_addr, sizeof(group_addr)) != msgLength)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return MCStatus::ERROR;
     }
     return MCStatus::SUCCESS;

@@ -8,11 +8,14 @@ file(GLOB ${folderName}_src
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-  ${Boost_INCLUDE_DIR})
+  ${PROJECT_SOURCE_DIR}/utility)
 
 # state that this project is a library
 # add_library(${targetName} ${${folderName}_src}) # static library
 add_library(${targetName} SHARED ${${folderName}_src}) # dynamic library
+
+target_link_libraries(${targetName}
+  utility)
 
 # Creates a folder "libraries" and adds target project (*.vcproj) under it
 set_property(TARGET ${targetName} PROPERTY FOLDER "libraries")

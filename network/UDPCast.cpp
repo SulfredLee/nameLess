@@ -1,4 +1,5 @@
 #include "UDPCast.h"
+#include "Logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,7 +94,7 @@ UDPCast::UDPStatus UDPCast::Recv(std::string& fromAddress, short& fromPort, std:
     byteRecv = recvfrom(m_socket, &receiveBuffer[0], receiveBuffer.size(), 0, (sockaddr*)&remoteInfo, (socklen_t*)&infoLength);
     if (byteRecv <= 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << " byteRecv: " << byteRecv << std::endl;
+        LOGMSG_ERROR("errono: %s byteRecv: %d", strerror(errno), byteRecv);
         return UDPStatus::ERROR;
     }
     fromAddress = inet_ntoa(remoteInfo.sin_addr);

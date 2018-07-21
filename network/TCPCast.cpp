@@ -1,4 +1,5 @@
 #include "TCPCast.h"
+#include "Logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,7 +44,7 @@ TCPCast::TCPStatus TCPCast::Start()
     // create TCP socket
     if ((m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return TCPStatus::ERROR;
     }
     // set address and port for local address
@@ -56,7 +57,7 @@ TCPCast::TCPStatus TCPCast::Start()
         // bind local address
         if (bind(m_socket, (struct sockaddr *)&local_addr, sizeof(local_addr)) < 0)
         {
-            std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+            LOGMSG_ERROR("errono: %s", strerror(errno));
             return TCPStatus::ERROR;
         }
         // get ready the server
@@ -84,7 +85,7 @@ TCPCast::TCPStatus TCPCast::Connect(const std::string& toAddress, const short to
     int err = connect(m_socket, (struct sockaddr*)&toInfo, sizeof(sockaddr_in));
     if (err == -1)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return TCPStatus::ERROR;
     }
     return TCPStatus::SUCCESS;
@@ -94,7 +95,7 @@ TCPCast::TCPStatus TCPCast::ClientSend(char const * const sendMsg, const int msg
 {
     if (send(m_socket, sendMsg, msgLength, 0) != msgLength)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return TCPStatus::ERROR;
     }
     return TCPStatus::SUCCESS;
@@ -104,7 +105,7 @@ TCPCast::TCPStatus TCPCast::ClientRecv(std::vector<char>& receiveBuffer, int& by
 {
     if ((byteRecv = recv(m_socket, &receiveBuffer[0], receiveBuffer.size(), MSG_WAITALL)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return TCPStatus::ERROR;
     }
     return TCPStatus::SUCCESS;
@@ -117,7 +118,7 @@ int TCPCast::Accept()
     memset(&clientInfo, 0, infoLength);
     int clientHandle = accept(m_socket, (struct sockaddr*)&clientInfo, (socklen_t*)&infoLength);
 
-    std::cout << "Received client " << inet_ntoa(clientInfo.sin_addr) << ":" << ntohs(clientInfo.sin_port) << std::endl;
+    LOGMSG_INFO("Received client %s:%d", inet_ntoa(clientInfo.sin_addr), (int)ntohs(clientInfo.sin_port));
     return clientHandle;
 }
 
@@ -125,7 +126,7 @@ TCPCast::TCPStatus TCPCast::ServerSend(int clientHandle, char const * const send
 {
     if (send(clientHandle, sendMsg, msgLength, 0) != msgLength)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return TCPStatus::ERROR;
     }
     return TCPStatus::SUCCESS;
@@ -135,7 +136,7 @@ TCPCast::TCPStatus TCPCast::ServerRecv(int clientHandle, std::vector<char>& rece
 {
     if ((byteRecv = recv(clientHandle, &receiveBuffer[0], receiveBuffer.size(), MSG_WAITALL)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return TCPStatus::ERROR;
     }
     return TCPStatus::SUCCESS;
