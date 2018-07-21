@@ -15,14 +15,14 @@ int main(int argc, char* argv[])
     std::string toAddress = "225.1.32.28";
     Multicast MCast;
 
-    if (MCast.InitComponent("192.168.0.110", 6000) == Multicast::MCStatus::SUCCESS)
+    if (MCast.InitComponent("192.168.0.112", 6000) == Multicast::MCStatus::SUCCESS)
     {
         sendData.resize(4);
         int count = 0;
         while(true)
         {
             memcpy(&sendData[0], &count, sizeof(int));
-            Multicast::MCStatus retStatus = MCast.Send(toAddress, sendData, sizeof(int));
+            Multicast::MCStatus retStatus = MCast.Send(toAddress, &sendData[0], sizeof(int));
             if (retStatus == Multicast::MCStatus::SUCCESS)
             {
                 LOGMSG_INFO("Send success! count: %d", count);

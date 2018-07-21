@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     int byteRecv;
     Multicast MCast;
 
-    if (MCast.InitComponent("192.168.0.110", 6000) == Multicast::MCStatus::SUCCESS)
+    if (MCast.InitComponent("192.168.0.112", 6000) == Multicast::MCStatus::SUCCESS)
     {
         MCast.JoinGroup("225.1.32.28");
 

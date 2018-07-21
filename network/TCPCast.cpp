@@ -90,9 +90,9 @@ TCPCast::TCPStatus TCPCast::Connect(const std::string& toAddress, const short to
     return TCPStatus::SUCCESS;
 }
 
-TCPCast::TCPStatus TCPCast::ClientSend(const std::vector<char>& sendMsg, const int msgLength)
+TCPCast::TCPStatus TCPCast::ClientSend(char const * const sendMsg, const int msgLength)
 {
-    if (send(m_socket, &sendMsg[0], msgLength, 0) != msgLength)
+    if (send(m_socket, sendMsg, msgLength, 0) != msgLength)
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
         return TCPStatus::ERROR;
@@ -121,9 +121,9 @@ int TCPCast::Accept()
     return clientHandle;
 }
 
-TCPCast::TCPStatus TCPCast::ServerSend(int clientHandle, const std::vector<char>& sendMsg, const int msgLength)
+TCPCast::TCPStatus TCPCast::ServerSend(int clientHandle, char const * const sendMsg, const int msgLength)
 {
-    if (send(clientHandle, &sendMsg[0], msgLength, 0) != msgLength)
+    if (send(clientHandle, sendMsg, msgLength, 0) != msgLength)
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
         return TCPStatus::ERROR;

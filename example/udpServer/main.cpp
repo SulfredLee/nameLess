@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
             }
 
             memcpy(&sendData[0], &count, sizeof(int));
-            retStatus = udpServer.Send(clientAddress, clientPort, sendData, sizeof(int));
+            retStatus = udpServer.Send(clientAddress, clientPort, &sendData[0], sizeof(int));
             if (retStatus == UDPCast::UDPStatus::SUCCESS)
             {
                 LOGMSG_INFO("Send success! count: %d", count);

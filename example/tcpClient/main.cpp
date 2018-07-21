@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
                 }
 
                 memcpy(&sendData[0], &count, sizeof(int));
-                retStatus = tcpClient.ClientSend(sendData, sizeof(int));
+                retStatus = tcpClient.ClientSend(&sendData[0], sizeof(int));
                 if (retStatus == TCPCast::TCPStatus::SUCCESS)
                 {
                     LOGMSG_INFO("Send success! count: %d", count);

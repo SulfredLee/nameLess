@@ -70,14 +70,14 @@ UDPCast::UDPStatus UDPCast::SetTTL(int ttl)
     return UDPStatus::SUCCESS;
 }
 
-UDPCast::UDPStatus UDPCast::Send(std::string& toAddress, short& toPort, const std::vector<char>& sendMsg, const int msgLength)
+UDPCast::UDPStatus UDPCast::Send(std::string& toAddress, short& toPort, char const * const sendMsg, const int msgLength)
 {
     struct sockaddr_in to_addr;
 
     to_addr.sin_family = AF_INET;
     to_addr.sin_addr.s_addr = inet_addr(toAddress.c_str());
     to_addr.sin_port = htons(toPort);
-    if (sendto(m_socket, &sendMsg[0], msgLength, 0, (sockaddr*)&to_addr, sizeof(to_addr)) != (int)sendMsg.size())
+    if (sendto(m_socket, sendMsg, msgLength, 0, (sockaddr*)&to_addr, sizeof(to_addr)) != msgLength)
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
         return UDPStatus::ERROR;

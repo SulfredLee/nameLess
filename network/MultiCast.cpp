@@ -168,14 +168,14 @@ Multicast::MCStatus Multicast::SetTTL(int ttl)
     return MCStatus::SUCCESS;
 }
 
-Multicast::MCStatus Multicast::Send(const std::string& toAddress, const std::vector<char>& sendMsg, const int msgLength)
+Multicast::MCStatus Multicast::Send(const std::string& toAddress, char const * const sendMsg, const int msgLength)
 {
     struct sockaddr_in group_addr;
 
     group_addr.sin_family = AF_INET;
     group_addr.sin_addr.s_addr = inet_addr(toAddress.c_str());
     group_addr.sin_port = htons(m_ifPort);
-    if (sendto(m_socket, &sendMsg[0], msgLength, 0, (sockaddr*)&group_addr, sizeof(group_addr)) != (int)sendMsg.size())
+    if (sendto(m_socket, sendMsg, msgLength, 0, (sockaddr*)&group_addr, sizeof(group_addr)) != msgLength)
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
         return MCStatus::ERROR;

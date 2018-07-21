@@ -16,13 +16,13 @@ class TCPCast
     // Client
     // Connect to TCP Server
     TCPStatus Connect(const std::string& toAddress, const short toPort);
-    TCPStatus ClientSend(const std::vector<char>& sendMsg, const int msgLength);
+    TCPStatus ClientSend(char const * const sendMsg, const int msgLength);
     TCPStatus ClientRecv(std::vector<char>& receiveBuffer, int& byteRecv);
 
     // Server
     // Wait for clients and return client handle
     int Accept();
-    TCPStatus ServerSend(int clientHandle, const std::vector<char>& sendMsg, const int msgLength);
+    TCPStatus ServerSend(int clientHandle, char const * const sendMsg, const int msgLength);
     TCPStatus ServerRecv(int clientHandle, std::vector<char>& receiveBuffer, int& byteRecv);
  private:
     int m_socket;

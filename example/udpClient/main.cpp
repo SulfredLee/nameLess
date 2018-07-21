@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
             short serverPort = 7788;
 
             memcpy(&sendData[0], &count, sizeof(int));
-            UDPCast::UDPStatus retStatus = udpClient.Send(serverAddress, serverPort, sendData, sizeof(int));
+            UDPCast::UDPStatus retStatus = udpClient.Send(serverAddress, serverPort, &sendData[0], sizeof(int));
             if (retStatus == UDPCast::UDPStatus::SUCCESS)
             {
                 LOGMSG_INFO("Send success! count: %d", count);

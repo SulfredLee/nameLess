@@ -26,7 +26,7 @@ class Multicast
 
     // Server
     // Send a message to the multicasting address with specified port.
-    MCStatus Send(const std::string& toAddress, const std::vector<char>& sendMsg, const int msgLength);
+    MCStatus Send(const std::string& toAddress, char const * const sendMsg, const int msgLength);
  private:
     int m_socket;
     std::string m_ifAddress;
