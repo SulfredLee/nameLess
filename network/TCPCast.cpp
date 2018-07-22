@@ -124,6 +124,8 @@ int TCPCast::Accept()
 
 TCPCast::TCPStatus TCPCast::ServerSend(int clientHandle, char const * const sendMsg, const int msgLength)
 {
+    DefaultLock lock(&m_sendLock);
+
     if (send(clientHandle, sendMsg, msgLength, 0) != msgLength)
     {
         LOGMSG_ERROR("errono: %s", strerror(errno));

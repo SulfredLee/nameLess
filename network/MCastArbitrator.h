@@ -6,6 +6,7 @@
 #include <set>
 
 #include "MultiCast.h"
+#include "DefaultMutex.h"
 
 #include <time.h>
 
@@ -40,6 +41,7 @@ class MCastArbitrator
     int m_dataFingerPrint;
     std::set<std::string> m_outputGroups;
     timeval m_latestTimeSeeFingerPrint;
+    DefaultMutex m_sendLock;
  private:
     void SendArbitration();
     void ReceiveArbitration();

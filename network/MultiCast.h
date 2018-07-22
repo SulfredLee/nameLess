@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "DefaultMutex.h"
+
 class Multicast
 {
  public:
@@ -32,6 +34,7 @@ class Multicast
     std::string m_ifAddress;
     short m_ifPort;
     bool m_isClient;
+    DefaultMutex m_sendLock;
  private:
     MCStatus Start();
     void Stop();

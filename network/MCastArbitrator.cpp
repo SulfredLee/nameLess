@@ -221,6 +221,7 @@ MCastArbitrator::MCArbiStatus MCastArbitrator::Send(char const * const sendMsg, 
     MCArbiStatus ret = MCArbiStatus::ERROR;
     if (m_status == MCArbiStatus::PRIMARY)
     {
+        DefaultLock lock(&m_sendLock);
         for (auto it = m_outputGroups.begin(); it != m_outputGroups.end(); it++)
         {
             ret = ConvertStatus(m_NormalSoc.Send(*it, sendMsg, msgLength));

@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "DefaultMutex.h"
+
 class UDPCast
 {
  public:
@@ -24,6 +26,7 @@ class UDPCast
     std::string m_ifAddress;
     short m_ifPort;
     bool m_isClient;
+    DefaultMutex m_sendLock;
  private:
     UDPStatus Start();
     void Stop();

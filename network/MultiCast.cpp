@@ -176,6 +176,9 @@ Multicast::MCStatus Multicast::Send(const std::string& toAddress, char const * c
     group_addr.sin_family = AF_INET;
     group_addr.sin_addr.s_addr = inet_addr(toAddress.c_str());
     group_addr.sin_port = htons(m_ifPort);
+
+    DefaultLock lock(&m_sendLock);
+
     if (sendto(m_socket, sendMsg, msgLength, 0, (sockaddr*)&group_addr, sizeof(group_addr)) != msgLength)
     {
         LOGMSG_ERROR("errono: %s", strerror(errno));

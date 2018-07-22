@@ -78,6 +78,9 @@ UDPCast::UDPStatus UDPCast::Send(std::string& toAddress, short& toPort, char con
     to_addr.sin_family = AF_INET;
     to_addr.sin_addr.s_addr = inet_addr(toAddress.c_str());
     to_addr.sin_port = htons(toPort);
+
+    DefaultLock lock(&m_sendLock);
+
     if (sendto(m_socket, sendMsg, msgLength, 0, (sockaddr*)&to_addr, sizeof(to_addr)) != msgLength)
     {
         std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;

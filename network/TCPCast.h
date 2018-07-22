@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "DefaultMutex.h"
+
 class TCPCast
 {
  public:
@@ -30,6 +32,7 @@ class TCPCast
     short m_ifPort;
     bool m_isClient;
     int m_numClients;
+    DefaultMutex m_sendLock;
  private:
     TCPStatus Start();
     void Stop();
