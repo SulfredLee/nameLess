@@ -124,9 +124,9 @@ Multicast::MCStatus Multicast::SelectRead(long usec, long sec)
         ptm = NULL;
     else
         ptm = &tm;
-    if ((ret = select(0, &fdread, NULL, NULL, ptm)) >= 0)
+    if ((ret = select(m_socket + 1, &fdread, NULL, NULL, ptm)) >= 0)
     {
-        if (FD_ISSET(m_socket, &fdread))
+        if (ret != 0 && FD_ISSET(m_socket, &fdread))
         {
             return MCStatus::READ;
         }
