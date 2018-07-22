@@ -5,6 +5,7 @@
 #include <string.h>
 
 #define ARBIGROUP "225.1.20.159"
+#define ARBIFINGERPRINT 0xFFEE00EF
 
 MCastArbitrator::MCastArbitrator()
 {
@@ -38,7 +39,7 @@ MCastArbitrator::MCArbiStatus MCastArbitrator::InitComponent(const std::string& 
     m_arbitratorID = arbitratorID;
     m_instance = instance;
     m_status = MCArbiStatus::SECONDARY;
-    m_dataFingerPrint = 0xFFEE00EF;
+    m_dataFingerPrint = ARBIFINGERPRINT;
     gettimeofday(&m_latestTimeSeeFingerPrint, NULL);
 
     if (m_ArbiSoc.InitComponent(m_ifAddress, m_ifPort) != Multicast::MCStatus::SUCCESS)
