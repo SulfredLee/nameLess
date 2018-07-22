@@ -86,6 +86,38 @@ UDPCast::UDPStatus UDPCast::Send(std::string& toAddress, short& toPort, char con
     return UDPStatus::SUCCESS;
 }
 
+UDPCast::UDPStatus UDPCast::SelectRead(long uSec, long sec)
+{
+    fd_set fdread;
+    int ret;
+
+    struct timeval tm, *ptm;
+    tm.tv_sec = sec;
+    tm.tv_usec = uSec;
+    FD_ZERO(&fdread);
+    FD_SET(m_socket, &fdread);
+    if (uSec < 0 || sec < 0)
+        ptm = NULL;
+    else
+        ptm = &tm;
+    if ((ret = select(0, &fdread, NULL, NULL, ptm)) >= 0)
+    {
+        if (FD_ISSET(m_socket, &fdread))
+        {
+            return UDPStatus::READ;
+        }
+        else // if timeout and ret == 0
+        {
+            return UDPStatus::SUCCESS;
+        }
+    }
+    else
+    {
+        LOGMSG_ERROR("errono: %s ret: %d", strerror(errno), ret);
+        return UDPStatus::ERROR;
+    }
+}
+
 UDPCast::UDPStatus UDPCast::Recv(std::string& fromAddress, short& fromPort, std::vector<char>& receiveBuffer, int& byteRecv)
 {
     struct sockaddr_in remoteInfo;

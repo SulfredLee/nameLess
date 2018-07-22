@@ -17,6 +17,7 @@ class UDPCast
 
     // Client, Server
     UDPStatus Send(std::string& toAddress, short& toPort, char const * const sendMsg, const int msgLength);
+    UDPStatus SelectRead(long uSec=0, long sec=0);
     UDPStatus Recv(std::string& fromAddress, short& fromPort, std::vector<char>& receiveBuffer, int& byteRecv);
  private:
     int m_socket;
