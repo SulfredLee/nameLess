@@ -134,6 +134,8 @@ if ("${libopenssl_LIBRARY_DIR}" STREQUAL "" OR "${libopenssl_INCLUDE_DIR}" STREQ
     message(FATAL_ERROR "Cannot find openssl development resourse")
     return()
 endif()
+set(libopenssl_INCLUDE_DIR ${libopenssl_ROOT}include)
+set(libopenssl_LIBRARY_DIR ${libopenssl_ROOT}lib)
 message(STATUS "Info - libopenssl include path: ${libopenssl_INCLUDE_DIR}")
 message(STATUS "Info - libopenssl library path: ${libopenssl_LIBRARY_DIR}")
 
