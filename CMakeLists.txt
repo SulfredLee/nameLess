@@ -141,6 +141,7 @@ message(STATUS "Info - libopenssl library path: ${libopenssl_LIBRARY_DIR}")
 # libraries
 add_subdirectory(network)
 add_subdirectory(utility)
+add_subdirectory(utility_c)
 # applications
 add_subdirectory(example)
 add_subdirectory(jwtLearn)
