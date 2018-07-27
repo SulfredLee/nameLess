@@ -55,6 +55,10 @@ int pushMsgQ_C(void** inData, MsgQ_C* inQueue)
 
 int getMsgQ_C(void ** outData, MsgQ_C* inQueue)
 {
+    if (inQueue == NULL)
+    {
+        return 0;
+    }
     pthread_mutex_lock(&(inQueue->tailMutex));
     while (inQueue->outIndex == inQueue->inIndex){ // if no more data in queue
         pthread_cond_wait(&(inQueue->cond), &(inQueue->tailMutex));
