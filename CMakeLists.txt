@@ -137,6 +137,29 @@ endif()
 message(STATUS "Info - libopenssl include path: ${libopenssl_INCLUDE_DIR}")
 message(STATUS "Info - libopenssl library path: ${libopenssl_LIBRARY_DIR}")
 
+# tutorial for protobuf https://developers.google.com/protocol-buffers/docs/cpptutorial#reading-a-message
+# Handle protobuf libaries
+message(STATUS "Info - preparing for protobuf -------------------------")
+if (UNIX)
+  set(libprotobuf_ROOT "/usr/local/protobuf/3.6.0/")
+else ()
+endif ()
+find_path(libprotobuf_INCLUDE_DIR google/protobuf/message.h
+  PATHS ${libprotobuf_ROOT}include
+  DOC "Path where protobuf includes can be found")
+find_library(protobuf_LIBRARY NAMES protobuf protobuf-lite protoc PATH_SUFFIXES lib64 lib
+  PATHS ${libprotobuf_ROOT}lib
+  DOC "Path where the protobuf library can be found")
+get_filename_component(libprotobuf_LIBRARY_DIR "${protobuf_LIBRARY}" PATH)
+if ("${libprotobuf_LIBRARY_DIR}" STREQUAL "" OR "${libprotobuf_INCLUDE_DIR}" STREQUAL "")
+    message(FATAL_ERROR "Cannot find protobuf development resourse")
+    return()
+endif()
+set(libprotobuf_INCLUDE_DIR ${libprotobuf_ROOT}include)
+set(libprotobuf_LIBRARY_DIR ${libprotobuf_ROOT}lib)
+message(STATUS "Info - libprotobuf include path: ${libprotobuf_INCLUDE_DIR}")
+message(STATUS "Info - libprotobuf library path: ${libprotobuf_LIBRARY_DIR}")
+
 # Sub-directories where more CMakeLists.txt exist
 # libraries
 add_subdirectory(lib)

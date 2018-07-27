@@ -12,6 +12,7 @@ apps+=ninja
 apps+=ycmd
 apps+=spacemacs
 apps+=libjson
+apps+=protobuf
 
 all: apps
 
@@ -34,6 +35,8 @@ spacemacs: global cscope emacs ycmd .spacemacs
 global: .global
 
 ninja: .ninja
+
+protobuf: .protobuf
 
 qt: .qt
 
@@ -174,4 +177,14 @@ openssl: .openssl
 	sudo cp jsonlint /usr/local/libjson/1.0.0/bin; \
 	sudo cp libjson.a libjson.so* /usr/local/libjson/1.0.0/lib; \
 	sudo cp json.h /usr/local/libjson/1.0.0/include;
+	touch $@
+
+.protobuf:
+	git clone https://github.com/google/protobuf.git
+	sudo mkdir -p /usr/local/protobuf/3.6.0
+	cd protobuf; \
+	./autogen.sh \
+	./configure --prefix=/usr/local/protobuf/3.6.0 \
+	make -j 8; \
+	sudo make install;
 	touch $@
