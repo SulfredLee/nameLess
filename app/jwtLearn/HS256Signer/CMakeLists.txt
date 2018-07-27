@@ -1,4 +1,4 @@
-set(targetName "errorHandle")
+set(targetName "HS256Signer")
 get_filename_component(folderName ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 string(REPLACE " " "_" folderName ${folderName})
 
@@ -7,7 +7,7 @@ file(GLOB ${folderName}_inc
 file(GLOB ${folderName}_src
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-include_directories(${PROJECT_SOURCE_DIR}/network
+include_directories(${PROJECT_SOURCE_DIR}/lib/network
   ${libjwt_INCLUDE_DIR}
   ${libopenssl_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR})
@@ -17,7 +17,6 @@ add_executable(${targetName} ${${folderName}_src})
 
 target_link_libraries(${targetName}
   ${libjwt_LIBRARY_DIR}/libjwt.a
-  ${libopenssl_LIBRARY_DIR}/libssl.so
   ${libopenssl_LIBRARY_DIR}/libcrypto.so)
 
 # Creates a folder "executables" and adds target

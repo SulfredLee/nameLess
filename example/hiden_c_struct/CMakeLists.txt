@@ -7,9 +7,9 @@ file(GLOB ${folderName}_inc
 file(GLOB ${folderName}_src
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-include_directories(${PROJECT_SOURCE_DIR}/network
-  ${PROJECT_SOURCE_DIR}/utility
-  ${PROJECT_SOURCE_DIR}/utility_c
+include_directories(${PROJECT_SOURCE_DIR}/lib/network
+  ${PROJECT_SOURCE_DIR}/lib/utility
+  ${PROJECT_SOURCE_DIR}/lib/utility_c
   ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(${targetName} ${${folderName}_src})

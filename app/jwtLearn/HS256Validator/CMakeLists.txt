@@ -7,7 +7,7 @@ file(GLOB ${folderName}_inc
 file(GLOB ${folderName}_src
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-include_directories(${PROJECT_SOURCE_DIR}/network
+include_directories(${PROJECT_SOURCE_DIR}/lib/network
   ${libjwt_INCLUDE_DIR}
   ${libopenssl_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR})

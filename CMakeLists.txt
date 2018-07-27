@@ -139,15 +139,10 @@ message(STATUS "Info - libopenssl library path: ${libopenssl_LIBRARY_DIR}")
 
 # Sub-directories where more CMakeLists.txt exist
 # libraries
-add_subdirectory(network)
-add_subdirectory(utility)
-add_subdirectory(utility_c)
+add_subdirectory(lib)
 # applications
 add_subdirectory(example)
-add_subdirectory(jwtLearn)
-add_subdirectory(jwtSigner)
-add_subdirectory(csv2json)
-add_subdirectory(json2csv)
+add_subdirectory(app)
 
 # build a CPack driven installer package
 include (InstallRequiredSystemLibraries)
