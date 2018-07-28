@@ -339,6 +339,8 @@ you should place your code here."
   (spacemacs/set-leader-keys
     "sr" 'replace-string
     "gg" 'my-helm-grep-do-git-grep)
+  (add-to-list 'auto-mode-alist '("\\.mq5$" . c++-mode))
+  (add-to-list 'auto-mode-alist '("\\.mqh$" . c++-mode))
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
