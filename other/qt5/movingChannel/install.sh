@@ -1,7 +1,7 @@
 #!/bin/bash
 headerFiles=( CFractalPoint.mqh cisnewbar.mqh )
-expertFiles=( channelsplotter.mq5 )
-indicatorFiles=( x-bars_fractals.mq5 )
+expertFiles=( channelsplotter.mq5 testFractalPoint.mq5 )
+indicatorFiles=( x-bars_fractals.mq5 testIndicator.mq5 )
 dstPath="/mnt/c/Users/sflee/AppData/Roaming/MetaQuotes/Terminal/D0E8209F77C8CF37AD8BF550E51FF075/MQL5"
 sourcePath="$PWD"
 
