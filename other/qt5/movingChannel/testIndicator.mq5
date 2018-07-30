@@ -129,7 +129,7 @@ int OnCalculate(const int rates_total,
     if(fileHandle != INVALID_HANDLE)
     {
         //--- first, write the number of signals
-        FileWrite(fileHandle, _Symbol, TimeCurrent(), rates_total, prev_calculated);
+        FileWrite(fileHandle, _Symbol, TimeCurrent(), rates_total, prev_calculated, _Digits);
         //--- write the time and values of signals to the file
         for (int i = prev_calculated; i < rates_total; i++)
         {

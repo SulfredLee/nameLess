@@ -1,6 +1,7 @@
 debug/
 release/
 build/
+data/
 third_party/
 cscope.*
 GPATH

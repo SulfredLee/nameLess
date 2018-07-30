@@ -6,6 +6,6 @@
 namespace Utility
 {
     bool is_number(const std::string& s);
-    std::vector<std::string> splitString(const std::string& s, const char& delim);
+    std::vector<std::string> splitString(const std::string& s, const char delim);
 };
 #endif
