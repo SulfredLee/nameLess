@@ -7,7 +7,7 @@ file(GLOB ${folderName}_inc
 file(GLOB ${folderName}_src
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-include_directories(${PROJECT_SOURCE_DIR}/lib/nl_time
+include_directories(
   ${PROJECT_SOURCE_DIR}/lib/utility
   ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -15,8 +15,7 @@ add_executable(${targetName} ${${folderName}_src})
 # add_dependencies(${targetName} FrontEnd Utils)
 
 target_link_libraries(${targetName}
-  utility
-  nl_time)
+  utility)
 
 # Creates a folder "executables" and adds target
 # project (*.vcproj) under it
