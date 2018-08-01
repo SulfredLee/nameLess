@@ -3,6 +3,7 @@ release/
 build/
 data/
 third_party/
+data/
 cscope.*
 GPATH
 GRTAGS
