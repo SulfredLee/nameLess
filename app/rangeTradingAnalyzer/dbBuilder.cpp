@@ -4,8 +4,10 @@
 
 #include <fstream>
 
+#include <math.h>
 DBBuilder::DBBuilder(const std::string& inFile)
 {
+    LOGMSG_INFO("Process File: %s", inFile.c_str());
     std::ifstream FH(inFile.c_str());
     if (!FH.is_open())
     {
@@ -24,7 +26,8 @@ DBBuilder::DBBuilder(const std::string& inFile)
                 {
                     m_forexInfo.symbol = parts[0];
                     m_forexInfo.totalOHLC = std::stoi(parts[2]);
-                    m_forexInfo.digit = std::stoi(parts[4]);
+                    m_forexInfo.digit = std::stoi(parts[4]) < 0 ? 0 : std::stoi(parts[4]);
+                    m_forexInfo.shifter = pow(10, m_forexInfo.digit);
                 }
                 isFirstLine = false;
             }
@@ -62,13 +65,18 @@ OHLC DBBuilder::MakeOHLC(const std::vector<std::string>& inData)
     OHLC result;
 
     result.time.SetFromString(inData[0], "%Y.%m.%d %H.%M.%S");
-    result.open = std::stoi(inData[1]);
-    result.high = std::stoi(inData[2]);
-    result.low = std::stoi(inData[3]);
-    result.close = std::stoi(inData[4]);
+    result.open = ShiftByDigit(inData[1]);
+    result.high = ShiftByDigit(inData[2]);
+    result.low = ShiftByDigit(inData[3]);
+    result.close = ShiftByDigit(inData[4]);
     result.tickVolume = std::stoi(inData[5]);
     result.volume = std::stoi(inData[6]);
     result.spread = std::stoi(inData[7]);
 
     return result;
+}
+
+int DBBuilder::ShiftByDigit(const std::string& inValue)
+{
+    return std::stod(inValue) * m_forexInfo.shifter;
 }

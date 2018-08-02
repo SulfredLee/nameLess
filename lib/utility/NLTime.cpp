@@ -81,6 +81,20 @@ void NLTime::GetTime(int& H, int& Min, int& S)
     S = m_time.tm_sec;
 }
 
+void NLTime::GetDate(int& Y, int& Mon, int& D) const
+{
+    Y = m_time.tm_year;
+    Mon = m_time.tm_mon;
+    D = m_time.tm_mday;
+}
+
+void NLTime::GetTime(int& H, int& Min, int& S) const
+{
+    H = m_time.tm_hour;
+    Min = m_time.tm_min;
+    S = m_time.tm_sec;
+}
+
 void NLTime::SetFromString(const std::string& source, const std::string& format)
 {
     strptime(source.c_str(), format.c_str(), &m_time);
@@ -95,27 +109,11 @@ void NLTime::SetDate(int Y, int Mon, int D)
     mktime(&m_time);
 }
 
-void NLTime::SetDate(int&& Y, int&& Mon, int&& D)
-{
-    m_time.tm_year = std::move(Y);
-    m_time.tm_mon = std::move(Mon);
-    m_time.tm_mday = std::move(D);
-    mktime(&m_time);
-}
-
 void NLTime::SetTime(int H, int Min, int S)
 {
     m_time.tm_hour = H;
     m_time.tm_min = Min;
     m_time.tm_sec = S;
-    mktime(&m_time);
-}
-
-void NLTime::SetTime(int&& H, int&& Min, int&& S)
-{
-    m_time.tm_hour = std::move(H);
-    m_time.tm_min = std::move(Min);
-    m_time.tm_sec = std::move(S);
     mktime(&m_time);
 }
 
@@ -136,6 +134,13 @@ void NLTime::AddTime(int H, int Min, int S)
 }
 
 std::string NLTime::toString(const std::string& format)
+{
+    char buff[1024];
+    strftime(buff, sizeof(buff), format.c_str(), &m_time);
+    return std::string(buff);
+}
+
+std::string NLTime::toString(const std::string& format) const
 {
     char buff[1024];
     strftime(buff, sizeof(buff), format.c_str(), &m_time);

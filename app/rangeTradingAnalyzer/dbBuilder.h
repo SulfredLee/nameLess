@@ -17,5 +17,6 @@ class DBBuilder
     std::vector<OHLC>& GetOHLCs();
  private:
     OHLC MakeOHLC(const std::vector<std::string>& inData);
+    int ShiftByDigit(const std::string& inValue);
 };
 #endif

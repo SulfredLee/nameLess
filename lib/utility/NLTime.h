@@ -21,18 +21,19 @@ class NLTime
     void GetCurrentTime();
     void GetDate(int& Y, int& Mon, int& D);
     void GetTime(int& H, int& Min, int& S);
+    void GetDate(int& Y, int& Mon, int& D) const;
+    void GetTime(int& H, int& Min, int& S) const;
 
     void SetFromString(const std::string& source, const std::string& format);
 
     void SetDate(int Y, int Mon, int D);
-    void SetDate(int&& Y, int&& Mon, int&& D);
     void SetTime(int H, int Min, int S);
-    void SetTime(int&& H, int&& Min, int&& S);
 
     void AddDate(int Y, int Mon, int D);
     void AddTime(int H, int Min, int S);
 
     std::string toString(const std::string& format);
+    std::string toString(const std::string& format) const;
 
     // there has no meaning for += operator, implement for demo only
     NLTime& operator+= (const NLTime& that);

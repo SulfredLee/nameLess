@@ -8,6 +8,7 @@ struct ForexInfo
     std::string symbol;
     int totalOHLC;
     int digit;
+    int shifter;
 };
 
 struct OHLC
