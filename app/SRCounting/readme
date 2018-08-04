@@ -1,4 +1,0 @@
-This program is used to count the support and resistance occurance.
-
-useful command:
-    ls *csv | awk '{printf "iconv -f UCS-2LE -t UTF-8 %s > ./converted/%s\n", $1, $1}' | sh
