@@ -68,3 +68,13 @@ void Counter::Convert2Result()
     }
     std::sort(m_countingResult.begin(), m_countingResult.end(), priceCompare);
 }
+
+void Counter::PrintResult(const std::string& outputFile, const ForexInfo& forexInfo)
+{
+    std::ofstream FH(outputFile.c_str());
+    for (size_t i = 0; i < m_countingResult.size(); i++)
+    {
+        FH << m_countingResult[i].price / static_cast<double>(forexInfo.shifter) << "," << m_countingResult[i].occurrence << std::endl;
+    }
+    FH.close();
+}

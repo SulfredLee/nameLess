@@ -12,13 +12,7 @@
 #include "PDistriCounter.h"
 #include "ResultPrinter.h"
 #include "NLTime.h"
-
-std::string GetOutputFileName(const std::string& inputFile, const NLTime& startTime, const NLTime& endTime, Counter::RangeType rangeType)
-{
-    std::stringstream ss;
-    ss << inputFile << "." << startTime.toString("%Y.%m.%d") << "_" << endTime.toString("%Y.%m.%d") << "." << RangeType2String(rangeType) << ".dis.csv";
-    return ss.str();
-}
+#include "MPDistriCounter.h"
 
 int main(int argc, char* argv[])
 {
@@ -54,6 +48,8 @@ int main(int argc, char* argv[])
         counters.push_back(std::make_shared<SRCounter>());
     else if (counterType == "PDistriCounter")
         counters.push_back(std::make_shared<PDistriCounter>());
+    else if (counterType == "MPDistriCounter")
+        counters.push_back(std::make_shared<MPDistriCounter>());
     for (size_t j = 0; j < counters.size(); j++)
     {
         if (counterType == "SRCounter" || counterType == "PDistriCounter")
@@ -67,19 +63,19 @@ int main(int argc, char* argv[])
                     nextIdx = counters[j]->DoCounting(startIdx, OHLCs, duration_Month[i], Counter::RangeType::MONTH);
                     if (nextIdx != -1)
                     {
-                        LOGMSG_DEBUG("Output File Name: %s", GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::MONTH).c_str());
-                        printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::MONTH), counters[j]->GetResult(), forexInfo);
+                        LOGMSG_DEBUG("Output File Name: %s", counters[j]->GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::MONTH).c_str());
+                        counters[j]->PrintResult(counters[j]->GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::MONTH), forexInfo);
                     }
                     else
                     {
-                        LOGMSG_DEBUG("Output File Name: %s", GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::MONTH).c_str());
-                        printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::MONTH), counters[j]->GetResult(), forexInfo);
+                        LOGMSG_DEBUG("Output File Name: %s", counters[j]->GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::MONTH).c_str());
+                        counters[j]->PrintResult(counters[j]->GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::MONTH), forexInfo);
                     }
                     startIdx = nextIdx;
                 } while (nextIdx > 0);
             }
         }
-        if (counterType == "PDistriCounter")
+        if (counterType == "PDistriCounter" || counterType == "MPDistriCounter")
         {
             for (size_t i = 0; i < duration_Day.size(); i++)
             {
@@ -90,11 +86,11 @@ int main(int argc, char* argv[])
                     nextIdx = counters[j]->DoCounting(startIdx, OHLCs, duration_Day[i], Counter::RangeType::DAY);
                     if (nextIdx != -1)
                     {
-                        printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::DAY), counters[j]->GetResult(), forexInfo);
+                        counters[j]->PrintResult(counters[j]->GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::DAY), forexInfo);
                     }
                     else
                     {
-                        printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::DAY), counters[j]->GetResult(), forexInfo);
+                        counters[j]->PrintResult(counters[j]->GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::DAY), forexInfo);
                     }
                     startIdx = nextIdx;
                 } while (nextIdx > 0);

@@ -2,6 +2,7 @@
 #define COUNTER_H
 #include <vector>
 #include <string>
+#include <sstream>
 #include <unordered_map>
 #include <algorithm>
 
@@ -32,7 +33,8 @@ class Counter
 
     int DoCounting(size_t startIdx, const std::vector<OHLC>& inData, int timeRange, RangeType rangeType);
 
-    const std::vector<ResultData>& GetResult(){ return m_countingResult; };
+    virtual void PrintResult(const std::string& outputFile, const ForexInfo& forexInfo);
+    virtual std::string GetOutputFileName(const std::string& inputFile, const NLTime& startTime, const NLTime& endTime, Counter::RangeType rangeType) = 0;
  protected:
     virtual int DoCountingPost(size_t startIdx, const std::vector<OHLC>& inData, int timeRange, RangeType rangeType, NLTime endTime) = 0;
     void Convert2Result();

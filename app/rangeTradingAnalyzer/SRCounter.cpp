@@ -43,3 +43,10 @@ void SRCounter::CountAPrice(int price)
         it->second++;
     }
 }
+
+std::string SRCounter::GetOutputFileName(const std::string& inputFile, const NLTime& startTime, const NLTime& endTime, Counter::RangeType rangeType)
+{
+    std::stringstream ss;
+    ss << inputFile << "." << startTime.toString("%Y.%m.%d") << "_" << endTime.toString("%Y.%m.%d") << "." << RangeType2String(rangeType) << ".dis.csv";
+    return ss.str();
+}
