@@ -9,6 +9,7 @@
 #include "dbBuilder.h"
 #include "Counter.h"
 #include "SRCounter.h"
+#include "PDistriCounter.h"
 #include "ResultPrinter.h"
 #include "NLTime.h"
 
@@ -35,8 +36,9 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    std::vector<int> duration_Month = {1, 2};
-    std::vector<int> duration_Day = {7, 12};
+    // std::vector<int> duration_Month = {1, 2};
+    std::vector<int> duration_Month;
+    std::vector<int> duration_Day = {14};
 
     DBBuilder dbBuilder(inputFile);
     std::vector<OHLC>& OHLCs = dbBuilder.GetOHLCs();
@@ -48,10 +50,13 @@ int main(int argc, char* argv[])
 
     ResultPrinter printer;
     std::vector<std::shared_ptr<Counter> > counters;
-    counters.push_back(std::make_shared<SRCounter>());
+    if (counterType == "SRCounter")
+        counters.push_back(std::make_shared<SRCounter>());
+    else if (counterType == "PDistriCounter")
+        counters.push_back(std::make_shared<PDistriCounter>());
     for (size_t j = 0; j < counters.size(); j++)
     {
-        if (counterType == "SRCounter" || counterType == "PDestriCounter")
+        if (counterType == "SRCounter" || counterType == "PDistriCounter")
         {
             for (size_t i = 0; i < duration_Month.size(); i++)
             {
@@ -60,13 +65,21 @@ int main(int argc, char* argv[])
                 do
                 {
                     nextIdx = counters[j]->DoCounting(startIdx, OHLCs, duration_Month[i], Counter::RangeType::MONTH);
-                    LOGMSG_DEBUG("Output File Name: %s", GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::MONTH).c_str());
-                    printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::MONTH), counters[j]->GetResult(), forexInfo);
+                    if (nextIdx != -1)
+                    {
+                        LOGMSG_DEBUG("Output File Name: %s", GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::MONTH).c_str());
+                        printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::MONTH), counters[j]->GetResult(), forexInfo);
+                    }
+                    else
+                    {
+                        LOGMSG_DEBUG("Output File Name: %s", GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::MONTH).c_str());
+                        printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::MONTH), counters[j]->GetResult(), forexInfo);
+                    }
                     startIdx = nextIdx;
                 } while (nextIdx > 0);
             }
         }
-        if (counterType == "PDestriCounter")
+        if (counterType == "PDistriCounter")
         {
             for (size_t i = 0; i < duration_Day.size(); i++)
             {
@@ -75,7 +88,14 @@ int main(int argc, char* argv[])
                 do
                 {
                     nextIdx = counters[j]->DoCounting(startIdx, OHLCs, duration_Day[i], Counter::RangeType::DAY);
-                    printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::DAY), counters[j]->GetResult(), forexInfo);
+                    if (nextIdx != -1)
+                    {
+                        printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs[nextIdx - 1].time, Counter::RangeType::DAY), counters[j]->GetResult(), forexInfo);
+                    }
+                    else
+                    {
+                        printer.Print(GetOutputFileName(outputFile, OHLCs[startIdx].time, OHLCs.back().time, Counter::RangeType::DAY), counters[j]->GetResult(), forexInfo);
+                    }
                     startIdx = nextIdx;
                 } while (nextIdx > 0);
             }

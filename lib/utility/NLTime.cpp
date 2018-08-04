@@ -69,8 +69,8 @@ void NLTime::GetCurrentTime()
 
 void NLTime::GetDate(int& Y, int& Mon, int& D)
 {
-    Y = m_time.tm_year;
-    Mon = m_time.tm_mon;
+    Y = m_time.tm_year + 1900;
+    Mon = m_time.tm_mon + 1;
     D = m_time.tm_mday;
 }
 
@@ -103,8 +103,8 @@ void NLTime::SetFromString(const std::string& source, const std::string& format)
 
 void NLTime::SetDate(int Y, int Mon, int D)
 {
-    m_time.tm_year = Y;
-    m_time.tm_mon = Mon;
+    m_time.tm_year = Y - 1900;
+    m_time.tm_mon = Mon - 1;
     m_time.tm_mday = D;
     mktime(&m_time);
 }
