@@ -22,6 +22,8 @@ class SlidingDB
     int initDB(size_t startIdx, const std::vector<OHLC>& inData, int timeRange); // return nextIdx
     int countToday(int startIdx, const std::vector<OHLC>& inData);
     double DistributionDiff();
+    const std::map<int, int>& getResultSlidingDB();
+    const std::map<int, int>& getResultToday();
  private:
     int countADay(int startIdx, const std::vector<OHLC>& inData, std::unordered_map<int, int>& targetDB); // return nextIdx
     void CountAPrice(int lowPrice, int highPrice, std::unordered_map<int, int>& targetDB);

@@ -13,8 +13,16 @@ do
     ${appRoot}/rangeTradingAnalyzer -f ${tradingFile} -o ${outputFileName} -t MPDistriCounter
 done
 
-distributionFiles=($(ls *dis.csv))
+# distributionFiles=($(ls *dis.csv))
+distributionFiles=($(ls *full.csv))
 
+for distributionFile in "${distributionFiles[@]}"
+do
+    echo "${distributionFile}"
+    gnuplot -e "inputFile='${distributionFile}'" -e "outputFile='${distributionFile}.png'" makeGraph.plt
+done
+
+distributionFiles=($(ls *one.csv))
 for distributionFile in "${distributionFiles[@]}"
 do
     echo "${distributionFile}"

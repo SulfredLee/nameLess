@@ -64,6 +64,8 @@ int SlidingDB::countToday(int startIdx, const std::vector<OHLC>& inData)
         UpdateSildingDBDistribution(m_hashCounterVector[0], m_countingResultSlidingDB, TOOL::SUB);
         m_hashCounterVector.erase(m_hashCounterVector.begin());
         m_hashCounterVector.push_back(m_hashCounter);
+        // add the previous day to DB
+        UpdateSildingDBDistribution(m_hashCounterVector.back(), m_countingResultSlidingDB, TOOL::ADD);
 
         // count today
         m_hashCounter.clear();
@@ -120,6 +122,8 @@ void SlidingDB::UpdateSildingDBDistribution(const std::unordered_map<int, int>& 
             if (it2 != outDistribution.end())
             {
                 it2->second -= it->second;
+                if (it2->second == 0)
+                    outDistribution.erase(it2);
             }
         }
     }
@@ -127,7 +131,20 @@ void SlidingDB::UpdateSildingDBDistribution(const std::unordered_map<int, int>& 
 
 double SlidingDB::DistributionDiff()
 {
-    return 0;
+    // get normalized distribution
+    // add 1 to all bins
+    // calcuate the difference
+    return m_countingResultToday.size();
+}
+
+const std::map<int, int>& SlidingDB::getResultSlidingDB()
+{
+    return m_countingResultSlidingDB;
+}
+
+const std::map<int, int>& SlidingDB::getResultToday()
+{
+    return m_countingResultToday;
 }
 
 MPDistriCounter::MPDistriCounter()
@@ -141,22 +158,38 @@ MPDistriCounter::~MPDistriCounter()
 
 void MPDistriCounter::PrintResult(const std::string& outputFile, const ForexInfo& forexInfo)
 {
-    if (m_countingFinished)
+    // if (m_countingFinished)
+    // {
+    //     std::ofstream FH(outputFile.c_str());
+    //     for (size_t i = 0; i < m_distributionDiff.size(); i++)
+    //     {
+    //         FH << i << "," << std::fixed << std::setprecision(8) << m_distributionDiff[i] << std::endl;
+    //     }
+    //     FH.close();
+    //     m_distributionDiff.clear();
+    // }
+    std::string fullFileName = outputFile + ".full.csv";
+    std::ofstream FH_full(fullFileName.c_str());
+    for (auto it = m_slidingDB.getResultSlidingDB().begin(); it != m_slidingDB.getResultSlidingDB().end(); it++)
     {
-        std::ofstream FH(outputFile.c_str());
-        for (size_t i = 0; i < m_distributionDiff.size(); i++)
-        {
-            FH << i << "," << std::fixed << std::setprecision(8) << m_distributionDiff[i] << std::endl;
-        }
-        FH.close();
-        m_distributionDiff.clear();
+        FH_full << it->first << "," << it->second << std::endl;
     }
+    FH_full.close();
+
+    std::string oneDayFileName = outputFile + ".one.csv";
+    std::ofstream FH_one(oneDayFileName.c_str());
+    for (auto it = m_slidingDB.getResultToday().begin(); it != m_slidingDB.getResultToday().end(); it++)
+    {
+        FH_one << it->first << "," << it->second << std::endl;
+    }
+    FH_one.close();
 }
 
 std::string MPDistriCounter::GetOutputFileName(const std::string& inputFile, const NLTime& startTime, const NLTime& endTime, Counter::RangeType rangeType)
 {
     std::stringstream ss;
-    ss << inputFile << "." << m_startTime.toString("%Y.%m.%d") << "_" << m_endTime.toString("%Y.%m.%d") << "." << RangeType2String(rangeType) << ".dis.csv";
+    // ss << inputFile << "." << m_startTime.toString("%Y.%m.%d") << "_" << m_endTime.toString("%Y.%m.%d") << "." << RangeType2String(rangeType) << ".dis.csv";
+    ss << inputFile << "." << startTime.toString("%Y.%m.%d") << "_" << endTime.toString("%Y.%m.%d") << "." << RangeType2String(rangeType) << ".dis.csv";
     return ss.str();
 }
 
@@ -177,7 +210,6 @@ int MPDistriCounter::DoCountingPost(size_t startIdx, const std::vector<OHLC>& in
         nextIdx = m_slidingDB.initDB(startIdx, inData, timeRange);
         LOGMSG_DEBUG("endTime-----: %s", inData[nextIdx -1].time.toString("%Y.%m.%d %H.%M.%S").c_str());
         nextIdx = m_slidingDB.countToday(nextIdx, inData);
-        LOGMSG_DEBUG("endTime-----: %s", inData[nextIdx -1].time.toString("%Y.%m.%d %H.%M.%S").c_str());
         m_distributionDiff.push_back(m_slidingDB.DistributionDiff());
     }
 
