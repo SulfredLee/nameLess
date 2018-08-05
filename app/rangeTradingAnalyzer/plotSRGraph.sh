@@ -3,7 +3,7 @@
 appRoot="/home/sulfred/Documents/SoftwareDev/github/SulfredLee/nameLess/build/app/rangeTradingAnalyzer"
 dataRoot="/home/sulfred/Documents/SoftwareDev/github/SulfredLee/nameLess/data/tradingData"
 
-tradingFiles=($(ls ${dataRoot}/*H4.csv))
+tradingFiles=($(ls ${dataRoot}/*Daily*.csv))
 
 for tradingFile in "${tradingFiles[@]}"
 do

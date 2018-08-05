@@ -14,6 +14,12 @@ int SRCounter::DoCountingPost(size_t startIdx, const std::vector<OHLC>& inData, 
     size_t i = startIdx;
     for (; i < inData.size() && inData[i].time < endTime; i ++)
     {
+        // int shift = -20;
+        // for (int j = 0; j < 40; j++)
+        // {
+        //     CountAPrice(inData[i].high + shift);
+        //     CountAPrice(inData[i].low + shift);
+        // }
         CountAPrice(inData[i].high);
         CountAPrice(inData[i].low);
     }

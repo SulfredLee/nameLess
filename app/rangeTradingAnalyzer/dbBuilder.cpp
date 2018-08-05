@@ -35,7 +35,7 @@ DBBuilder::DBBuilder(const std::string& inFile)
             {
                 if (parts.size() == 8) // time, open, high, low, close, tick_volume, volume, spread
                 {
-                    if (parts[0].size() < 19)
+                    if (parts[0].size() != 19 && parts[0].size() != 10)
                     {
                         continue;
                     }
@@ -69,9 +69,9 @@ OHLC DBBuilder::MakeOHLC(const std::vector<std::string>& inData)
     result.high = ShiftByDigit(inData[2]);
     result.low = ShiftByDigit(inData[3]);
     result.close = ShiftByDigit(inData[4]);
-    result.tickVolume = std::stoi(inData[5]);
-    result.volume = std::stoi(inData[6]);
-    result.spread = std::stoi(inData[7]);
+    // result.tickVolume = std::stoi(inData[5]);
+    // result.volume = std::stoi(inData[6]);
+    // result.spread = std::stoi(inData[7]);
 
     return result;
 }

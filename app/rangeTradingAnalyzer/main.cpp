@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     }
 
     // std::vector<int> duration_Month = {1, 2};
-    std::vector<int> duration_Month;
+    std::vector<int> duration_Month = {1000};
     std::vector<int> duration_Day = {14};
 
     DBBuilder dbBuilder(inputFile);
