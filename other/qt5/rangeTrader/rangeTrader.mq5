@@ -18,6 +18,18 @@ string OrderListFile = Symbol() + ".orderList.csv";
 
 SRLineManager srLineManager;
 
+void DebugPrintRequest(const MqlTradeRequest& inRequest)
+{
+    PrintFormat("action: %d, type: %d, price: %f, sl: %f, tp: %f, magic: %d, symbol: %s, volume: %f",
+                inRequest.action,
+                inRequest.type,
+                inRequest.price,
+                inRequest.sl,
+                inRequest.tp,
+                inRequest.magic,
+                inRequest.symbol,
+                inRequest.volume);
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -30,9 +42,27 @@ void OnInit()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+int countTick = 0;
+double yearHigh = 0;
+double yearLow = 1000;
 void OnTick()
 {
-    double lastPrice = SymbolInfoDouble(Symbol(), SYMBOL_LAST);
+    double lastPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+    countTick++;
+    // if (yearHigh < lastPrice)
+    // {
+    //     yearHigh = lastPrice;
+    //     PrintFormat("yearHigh: %f", yearHigh);
+    // }
+    // if (yearLow > lastPrice)
+    // {
+    //     yearLow = lastPrice;
+    //     PrintFormat("yearLow: %f", yearLow);
+    // }
+    if (countTick % 500000 == 0)
+    {
+        PrintFormat("countTick: %d", countTick);
+    }
     srLineManager.OnTick(lastPrice);
     while (srLineManager.HasNextRequest())
     {
@@ -40,6 +70,7 @@ void OnTick()
         request.magic = EXPERT_MAGIC;
         request.symbol = Symbol();
         request.volume = Lots;
+        DebugPrintRequest(request);
         MqlTradeResult result;
         ZeroMemory(result);
         //--- send the request

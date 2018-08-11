@@ -2,18 +2,22 @@
 
 #include "LimitOrder.mqh"
 
+enum ORDER_HIT_TYPE
+{
+    TP_HIT = 0,
+    SL_HIT = 1,
+};
+
 class SRTracker
 {
 private:
+    int m_orderStatck_len;
     LimitOrder m_curLimitStack[];
     int m_curLimitStack_len;
-    int m_nextStack_Idx; // used when push a new order
     LimitOrder m_stagingStack[]; // order in this stack is waiting for pushing to server
     int m_stagingStack_len;
-    int m_lastStagingStack_Idx;
-    LimitOrder m_curPlacedStack[]; // here sotred the orders which have been sent to the server
-    int m_curPlacedStack_len;
-    int m_curPlacedStack_Idx;
+    LimitOrder m_ActivatedStack[]; // here sotred the orders which have been sent to the server
+    int m_ActivatedStack_len;
     LimitOrder m_hitOrder;
 public:
     SRTracker()
@@ -25,7 +29,7 @@ public:
     {
         ArrayFree(m_curLimitStack);
         ArrayFree(m_stagingStack);
-        ArrayFree(m_curPlacedStack);
+        ArrayFree(m_ActivatedStack);
     }
 
     void InitComponent(int orderStack_len);
@@ -35,28 +39,34 @@ public:
     void MakeAnOrder(int Idx);
     bool HasNextOrder();
     LimitOrder GetNextLimitOrder();
-    int IsTP_SL_Hit(const double& lastPrice);
+    int IsTP_SL_Hit(const double& lastPrice, ORDER_HIT_TYPE& outHitType);
     bool IsEmptyOrder();
     void ReFillOrder();
     void Reset();
+    void RefreshOrder();
+    void ActivateOrder(int Idx);
+    void RemoveLimitOrder();
+
+    void DebugPrint();
 private:
     void RemoveFromArray(LimitOrder& array[], int Idx, int array_len);
 };
 
 void SRTracker::InitComponent(int orderStack_len)
 {
-    m_curLimitStack_len = orderStack_len;
+    m_orderStatck_len = orderStack_len;
+    Reset();
 
-    ArrayResize(m_curLimitStack, m_curLimitStack_len);
-    ArrayResize(m_stagingStack, m_curLimitStack_len); // the maximum size of the stagingStack is equal to total limit stack
-    ArrayResize(m_curPlacedStack, m_curLimitStack_len); // the maximum size of the stagingStack is equal to total limit stack
+    ArrayResize(m_curLimitStack, m_orderStatck_len);
+    ArrayResize(m_stagingStack, m_orderStatck_len); // the maximum size of the stagingStack is twice of current limit stack, since we have to handle clear order
+    ArrayResize(m_ActivatedStack, m_orderStatck_len); // the maximum size of the stagingStack is equal to total limit stack
 }
 
 bool SRTracker::AddOrder(const LimitOrder& inOrder)
 {
-    if (m_nextStack_Idx < m_curLimitStack_len)
+    if (m_curLimitStack_len < m_orderStatck_len)
     {
-        m_curLimitStack[m_nextStack_Idx++] = inOrder;
+        m_curLimitStack[m_curLimitStack_len++] = inOrder;
         return true;
     }
     else
@@ -65,6 +75,11 @@ bool SRTracker::AddOrder(const LimitOrder& inOrder)
 
 int SRTracker::IsLimit_Hit(const double& lastPrice)
 {
+    for (int i = 0; i < m_ActivatedStack_len; i++)
+    {
+        if (m_ActivatedStack[i].m_price == lastPrice)
+            return -1;
+    }
     for (int i = 0; i < m_curLimitStack_len; i++)
     {
         if (m_curLimitStack[i].m_price == lastPrice)
@@ -73,14 +88,19 @@ int SRTracker::IsLimit_Hit(const double& lastPrice)
     return -1;
 }
 
-int SRTracker::IsTP_SL_Hit(const double& lastPrice)
+int SRTracker::IsTP_SL_Hit(const double& lastPrice, ORDER_HIT_TYPE& outHitType)
 {
-    for (int i = 0; i < m_curPlacedStack_len; i++)
+    for (int i = 0; i < m_ActivatedStack_len; i++)
     {
-        if (m_curPlacedStack[i].m_TP == lastPrice || m_curPlacedStack[i].m_SL == lastPrice)
+        if (m_ActivatedStack[i].m_TP == lastPrice || m_ActivatedStack[i].m_SL == lastPrice)
         {
-            m_hitOrder = m_curPlacedStack[i];
-            RemoveFromArray(m_curPlacedStack, i, m_curPlacedStack_len--);
+            if (m_ActivatedStack[i].m_TP == lastPrice)
+                outHitType = TP_HIT;
+            else
+                outHitType = SL_HIT;
+            m_hitOrder = m_ActivatedStack[i];
+            PrintFormat("IsTP_SL_Hit: m_hitOrder: %s, lastPrice: %f", LimitOrderToString(m_hitOrder), lastPrice);
+            RemoveFromArray(m_ActivatedStack, i, m_ActivatedStack_len--);
             return i;
         }
     }
@@ -89,14 +109,13 @@ int SRTracker::IsTP_SL_Hit(const double& lastPrice)
 
 void SRTracker::MakeAnOrder(int Idx)
 {
-    if (m_stagingStack_len < m_curLimitStack_len)
+    if (m_stagingStack_len < m_orderStatck_len)
     {
         m_stagingStack[m_stagingStack_len++] = m_curLimitStack[Idx];
-        m_lastStagingStack_Idx = m_stagingStack_len - 1;
     }
     else
     {
-        PrintFormat("MakeAnOrder: not enough space for new order. m_stagingStack_len: %d, m_curLimitStack_len: %d", m_stagingStack_len, m_curLimitStack_len);
+        PrintFormat("MakeAnOrder: not enough space for new order. m_stagingStack_len: %d, m_orderStatck_len: %d", m_stagingStack_len, m_orderStatck_len);
     }
 }
 
@@ -107,17 +126,7 @@ bool SRTracker::HasNextOrder()
 
 LimitOrder SRTracker::GetNextLimitOrder()
 {
-    // get order
-    LimitOrder order = m_stagingStack[m_lastStagingStack_Idx--];
-    m_stagingStack_len--;
-
-    // record the order that pushed
-    if (m_curPlacedStack_len <= m_curLimitStack_len)
-    {
-        m_curPlacedStack[m_curPlacedStack_Idx++] = order;
-        m_curPlacedStack_len++;
-    }
-    return order;
+    return m_stagingStack[--m_stagingStack_len];
 }
 
 void SRTracker::RemoveFromArray(LimitOrder& array[], int Idx, int array_len)
@@ -130,29 +139,72 @@ void SRTracker::RemoveFromArray(LimitOrder& array[], int Idx, int array_len)
 
 bool SRTracker::IsEmptyOrder()
 {
-    return m_curPlacedStack_len <= 0 ? true : false;
+    return m_ActivatedStack_len <= 0 ? true : false;
 }
 
 void SRTracker::ReFillOrder()
 {
-    if (m_stagingStack_len < m_curLimitStack_len)
+    if (m_stagingStack_len < m_orderStatck_len)
     {
         m_stagingStack[m_stagingStack_len++] = m_hitOrder;
-        m_lastStagingStack_Idx = m_stagingStack_len - 1;
     }
     else
     {
-        PrintFormat("ReFillOrder: not enough space for new order. m_stagingStack_len: %d, m_curLimitStack_len: %d", m_stagingStack_len, m_curLimitStack_len);
+        PrintFormat("ReFillOrder: not enough space for new order. m_stagingStack_len: %d, m_orderStatck_len: %d", m_stagingStack_len, m_orderStatck_len);
     }
 }
 
 void SRTracker::Reset()
 {
     // same as constructor
-    m_stagingStack_len = 0; // at the begining we have an empty stagingStack
-    m_curPlacedStack_len = 0;
+    m_ActivatedStack_len = 0;
+    m_curLimitStack_len = 0;
+    m_stagingStack_len = 0;
+}
 
-    m_nextStack_Idx = 0;
-    m_lastStagingStack_Idx = 0;
-    m_curPlacedStack_Idx = 0;
+void SRTracker::RefreshOrder()
+{
+    for (int i = 0; i < m_curLimitStack_len; i++)
+    {
+        MakeAnOrder(i);
+    }
+}
+
+void SRTracker::ActivateOrder(int Idx)
+{
+    if (m_ActivatedStack_len < m_orderStatck_len && Idx < m_curLimitStack_len)
+    {
+        m_ActivatedStack[m_ActivatedStack_len++] = m_curLimitStack[Idx];
+    }
+}
+
+void SRTracker::RemoveLimitOrder()
+{
+    for (int i = 0; i < m_curLimitStack_len; i++)
+    {
+        if (m_hitOrder.m_price == m_curLimitStack[i].m_price)
+        {
+            RemoveFromArray(m_curLimitStack, i, m_curLimitStack_len--);
+            return;
+        }
+    }
+}
+
+void SRTracker::DebugPrint()
+{
+    PrintFormat("m_curLimitStack------------------------------len: %d", m_curLimitStack_len);
+    for (int i = 0; i < m_curLimitStack_len; i++)
+    {
+        PrintFormat("%s", LimitOrderToString(m_curLimitStack[i]));
+    }
+    PrintFormat("m_stagingStack--------------------------len: %d", m_stagingStack_len);
+    for (int i = 0; i < m_stagingStack_len; i++)
+    {
+        PrintFormat("%s", LimitOrderToString(m_stagingStack[i]));
+    }
+    PrintFormat("m_ActivatedStack--------------------------len: %d", m_ActivatedStack_len);
+    for (int i = 0; i < m_ActivatedStack_len; i++)
+    {
+        PrintFormat("%s", LimitOrderToString(m_ActivatedStack[i]));
+    }
 }

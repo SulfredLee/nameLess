@@ -20,6 +20,8 @@ private:
     int m_BuyLimitLayers;
     double m_lastPrice;
     SRTracker m_tracker;
+    bool m_isFirstHit;
+    int m_digitShift;
 public:
     void SRLineManager()
     {
@@ -31,6 +33,8 @@ public:
         m_lastPrice = -1;
         m_SellLimitLayers = 4;
         m_BuyLimitLayers = 4;
+        m_isFirstHit = true;
+        m_digitShift = MathPow(10, Digits());
 
         m_tracker.InitComponent(m_SellLimitLayers + m_BuyLimitLayers);
     };
@@ -46,22 +50,26 @@ public:
     void OnTick(double lastPrice);
     bool HasNextRequest();
     MqlTradeRequest GetNextLimitRequest();
+    void RemoveRemainingOrder();
 
 private:
     int GetNumberOfSRLines(string inputFile);
     void InitSRLines(string inputFile);
     void InitOrders();
-    void InitTracker();
+    bool InitTracker();
+    void HandleDecimal();
+    double GetDecimalRounding(const double& inData);
 };
 
-void SRLineManager::InitComponent(string SRFile)
+void SRLineManager::InitComponent(string inSRFile)
 {
     PrintFormat("InitComponent");
-    m_SRLines_len = GetNumberOfSRLines(SRFile);
+    m_SRLines_len = GetNumberOfSRLines(inSRFile);
     ArrayResize(m_SRLines, m_SRLines_len);
 
-    InitSRLines(SRFile);
+    InitSRLines(inSRFile);
     InitOrders();
+    HandleDecimal();
 }
 
 int SRLineManager::GetNumberOfSRLines(string inputFile)
@@ -177,28 +185,86 @@ void SRLineManager::PrintOrderList(string outputFile)
 
 void SRLineManager::OnTick(double lastPrice)
 {
-    m_lastPrice = lastPrice;
     if (m_lastPrice == -1)
     {
-        InitTracker();
+        m_lastPrice = lastPrice;
+        if (!InitTracker())
+        {
+            m_tracker.Reset();
+            m_lastPrice = -1;
+            return;
+        }
+        m_tracker.RefreshOrder();
+        PrintFormat("First After InitTracker-----------------------------------------");
+        PrintFormat("lastPrice: %f", lastPrice);
+        m_tracker.DebugPrint();
+        PrintFormat("---------------------------------------------------");
+        PrintFormat("---------------------------------------------------");
+        PrintFormat("---------------------------------------------------");
     }
+    m_lastPrice = lastPrice;
 
     int hitIdx = m_tracker.IsLimit_Hit(m_lastPrice); // hit a buy limit or sell limit
     if (hitIdx != -1)
     {
-        m_tracker.MakeAnOrder(hitIdx);
+        PrintFormat("IsLimit_Hit()--------------------------------------------");
+        m_isFirstHit = false;
+        PrintFormat("m_lastPrice: %f", m_lastPrice);
+        m_tracker.ActivateOrder(hitIdx);
+        PrintFormat("After ActivatedOrder");
+        m_tracker.DebugPrint();
+        PrintFormat("---------------------------------------------------");
+        PrintFormat("---------------------------------------------------");
+        PrintFormat("---------------------------------------------------");
     }
-    else
+    else if (!m_isFirstHit)
     {
-        hitIdx = m_tracker.IsTP_SL_Hit(m_lastPrice); // hit TP or SL
-        if (hitIdx != -1 && m_tracker.IsEmptyOrder())
+        ORDER_HIT_TYPE orderHitType;
+        hitIdx = m_tracker.IsTP_SL_Hit(m_lastPrice, orderHitType); // hit TP or SL
+        if (hitIdx != -1)
         {
-            m_tracker.Reset();
-            InitTracker();
-        }
-        else if (hitIdx != -1)
-        {
-            m_tracker.ReFillOrder();
+            if (m_tracker.IsEmptyOrder())
+            {
+                PrintFormat("IsEmptyOrder()----------------------------------------------");
+                RemoveRemainingOrder();
+                m_tracker.Reset();
+                if (!InitTracker())
+                {
+                    PrintFormat("Fail InitTracker");
+                    m_tracker.Reset();
+                    m_lastPrice = -1;
+                    return;
+                }
+                m_tracker.RefreshOrder();
+                PrintFormat("Second After InitTracker-------------------------------------");
+                PrintFormat("m_lastPrice: %f", m_lastPrice);
+                m_tracker.DebugPrint();
+                PrintFormat("---------------------------------------------------");
+                PrintFormat("---------------------------------------------------");
+                PrintFormat("---------------------------------------------------");
+            }
+            else if(orderHitType == TP_HIT)
+            {
+                PrintFormat("TP Hit--------------------------------------");
+                m_tracker.ReFillOrder();
+                PrintFormat("After ReFillOrder");
+                PrintFormat("m_lastPrice: %f", m_lastPrice);
+                m_tracker.DebugPrint();
+                PrintFormat("---------------------------------------------------");
+                PrintFormat("---------------------------------------------------");
+                PrintFormat("---------------------------------------------------");
+            }
+            else if (orderHitType == SL_HIT)
+            {
+                PrintFormat("SL HIT------------------------------------------");
+                m_tracker.RemoveLimitOrder();
+                PrintFormat("After Remove Limit Order");
+                PrintFormat("m_lastPrice: %f", m_lastPrice);
+                m_tracker.DebugPrint();
+                PrintFormat("---------------------------------------------------");
+                PrintFormat("---------------------------------------------------");
+                PrintFormat("---------------------------------------------------");
+            }
         }
     }
 }
@@ -213,7 +279,7 @@ MqlTradeRequest SRLineManager::GetNextLimitRequest()
     LimitOrder order = m_tracker.GetNextLimitOrder();
     MqlTradeRequest request;
     ZeroMemory(request);
-    request.action = TRADE_ACTION_DEAL;
+    request.action = TRADE_ACTION_PENDING; // TRADE_ACTION_DEAL;
     request.type   = order.m_limitType == BUY_LIMIT ? ORDER_TYPE_BUY_LIMIT : ORDER_TYPE_SELL_LIMIT;
     request.price  = order.m_price;
     request.sl     = order.m_SL;
@@ -221,7 +287,7 @@ MqlTradeRequest SRLineManager::GetNextLimitRequest()
     return request;
 }
 
-void SRLineManager::InitTracker()
+bool SRLineManager::InitTracker()
 {
     // find sell limit
     int justAbove = -1;
@@ -238,10 +304,14 @@ void SRLineManager::InitTracker()
     {
         for (int i = justAbove - m_SellLimitLayers + 1; i <= justAbove; i++)
         {
-            if (i < 0)
-                continue;
+            if (i < 2) // the first two orders in sell limit array are not useful
+                return false;
             m_tracker.AddOrder(m_SellLimitOrder[i]);
         }
+    }
+    else
+    {
+        return false;
     }
     // find buy limit
     int justBelow = -1;
@@ -256,11 +326,72 @@ void SRLineManager::InitTracker()
     // add buy orders
     if (justBelow > -1)
     {
-        for (int i = justBelow + m_BuyLimitLayers - 1; i >= justBelow; i--)
+        for (int i = justBelow; i < justBelow + m_BuyLimitLayers; i++)
         {
-            if (i >= m_BuyLimitOrder_len)
-                continue;
+            if (i >= m_BuyLimitOrder_len - 2) // the last two orders in buy limit array are not useful
+                return false;
             m_tracker.AddOrder(m_BuyLimitOrder[i]);
+        }
+    }
+    else
+    {
+        return false;
+    }
+    return true;
+}
+
+void SRLineManager::HandleDecimal()
+{
+    for (int i = 0; i < m_SRLines_len; i++)
+    {
+        m_SRLines[i] = GetDecimalRounding(m_SRLines[i]);
+    }
+    for (int i = 0; i < m_SellLimitOrder_len; i++)
+    {
+        m_SellLimitOrder[i].m_price = GetDecimalRounding(m_SellLimitOrder[i].m_price);
+        m_SellLimitOrder[i].m_TP = GetDecimalRounding(m_SellLimitOrder[i].m_TP);
+        m_SellLimitOrder[i].m_SL = GetDecimalRounding(m_SellLimitOrder[i].m_SL);
+    }
+    for (int i = 0; i < m_BuyLimitOrder_len; i++)
+    {
+        m_BuyLimitOrder[i].m_price = GetDecimalRounding(m_BuyLimitOrder[i].m_price);
+        m_BuyLimitOrder[i].m_TP = GetDecimalRounding(m_BuyLimitOrder[i].m_TP);
+        m_BuyLimitOrder[i].m_SL = GetDecimalRounding(m_BuyLimitOrder[i].m_SL);
+    }
+}
+
+double SRLineManager::GetDecimalRounding(const double& inData)
+{
+    int resultInt = inData * m_digitShift + 0.5;
+    return (double)resultInt / m_digitShift;
+}
+
+void SRLineManager::RemoveRemainingOrder()
+{
+    PrintFormat("Called RemoveRemainingOrder()");
+    MqlTradeRequest request={0};
+    MqlTradeResult  result={0};
+    int total = OrdersTotal(); // total number of placed pending orders
+    //--- iterate over all placed pending orders
+    for(int i = total-1; i >= 0; i--)
+    {
+        ulong  order_ticket = OrderGetTicket(i);                   // order ticket
+        ulong  magic = OrderGetInteger(ORDER_MAGIC);               // MagicNumber of the order
+        //--- if the MagicNumber matches
+        if (magic == EXPERT_MAGIC)
+        {
+            PrintFormat("Cleaning order %d", i);
+            //--- zeroing the request and result values
+            ZeroMemory(request);
+            ZeroMemory(result);
+            //--- setting the operation parameters
+            request.action = TRADE_ACTION_REMOVE;                   // type of trade operation
+            request.order = order_ticket;                         // order ticket
+            //--- send the request
+            if (!OrderSend(request,result))
+                PrintFormat("OrderSend error %d",GetLastError());  // if unable to send the request, output the error code
+            //--- information about the operation
+            PrintFormat("retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
         }
     }
 }
