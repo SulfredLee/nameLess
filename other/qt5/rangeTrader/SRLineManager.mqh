@@ -11,6 +11,8 @@ private:
     int m_SellLimitOrder_len;
     LimitOrder m_BuyLimitOrder[]; // 5 % below SRLine
     int m_BuyLimitOrder_len;
+    LimitOrder m_SLOrder[]; // save SL order, when 2 SL order happened continuously, we will send e-mail alert
+    int m_SLOrder_len;
     string m_inputFolder;
     string m_outputFolder;
     double m_limitOffset;
@@ -21,6 +23,7 @@ private:
     double m_lastPrice;
     SRTracker m_tracker;
     bool m_isFirstHit;
+    bool m_isRunEA;
     int m_digitShift;
 public:
     void SRLineManager()
@@ -34,6 +37,7 @@ public:
         m_SellLimitLayers = 4;
         m_BuyLimitLayers = 4;
         m_isFirstHit = true;
+        m_isRunEA = true;
         m_digitShift = MathPow(10, Digits());
 
         m_tracker.InitComponent(m_SellLimitLayers + m_BuyLimitLayers);
@@ -43,6 +47,7 @@ public:
         ArrayFree(m_SRLines);
         ArrayFree(m_SellLimitOrder);
         ArrayFree(m_BuyLimitOrder);
+        ArrayFree(m_SLOrder);
     };
 
     void InitComponent(string SRFile);
@@ -59,6 +64,8 @@ private:
     bool InitTracker();
     void HandleDecimal();
     double GetDecimalRounding(const double& inData);
+    void SLEmailAlert(int hitIdx);
+    void ResetSLRecord();
 };
 
 void SRLineManager::InitComponent(string inSRFile)
@@ -67,6 +74,7 @@ void SRLineManager::InitComponent(string inSRFile)
     m_SRLines_len = GetNumberOfSRLines(inSRFile);
     PrintFormat("m_SRLines_len: %d", m_SRLines_len);
     ArrayResize(m_SRLines, m_SRLines_len);
+    ArrayResize(m_SLOrder, m_SellLimitLayers);
 
     InitSRLines(inSRFile);
     InitOrders();
@@ -190,6 +198,8 @@ void SRLineManager::PrintOrderList(string outputFile)
 
 void SRLineManager::OnTick(double lastPrice)
 {
+    if (!m_isRunEA)
+        return;
     if (m_lastPrice == -1)
     {
         m_lastPrice = lastPrice;
@@ -199,6 +209,7 @@ void SRLineManager::OnTick(double lastPrice)
             m_lastPrice = -1;
             return;
         }
+        ResetSLRecord();
         m_tracker.RefreshOrder();
         PrintFormat("First After InitTracker-----------------------------------------");
         PrintFormat("lastPrice: %f", lastPrice);
@@ -240,6 +251,7 @@ void SRLineManager::OnTick(double lastPrice)
                     m_lastPrice = -1;
                     return;
                 }
+                ResetSLRecord();
                 m_tracker.RefreshOrder();
                 PrintFormat("Second After InitTracker-------------------------------------");
                 PrintFormat("m_lastPrice: %f", m_lastPrice);
@@ -251,6 +263,8 @@ void SRLineManager::OnTick(double lastPrice)
             else if(orderHitType == TP_HIT)
             {
                 PrintFormat("TP Hit--------------------------------------");
+                ResetSLRecord();
+
                 m_tracker.ReFillOrder();
                 PrintFormat("After ReFillOrder");
                 PrintFormat("m_lastPrice: %f", m_lastPrice);
@@ -262,6 +276,7 @@ void SRLineManager::OnTick(double lastPrice)
             else if (orderHitType == SL_HIT)
             {
                 PrintFormat("SL HIT------------------------------------------");
+                SLEmailAlert(hitIdx);
                 m_tracker.RemoveLimitOrder();
                 PrintFormat("After Remove Limit Order");
                 PrintFormat("m_lastPrice: %f", m_lastPrice);
@@ -400,4 +415,47 @@ void SRLineManager::RemoveRemainingOrder()
             PrintFormat("retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
         }
     }
+}
+
+void SRLineManager::SLEmailAlert(int hitIdx)
+{
+    PrintFormat("SLEmailAlert()");
+    // add SL record
+    m_SLOrder[m_SLOrder_len++] = m_tracker.GetHitOrder();
+
+    if (m_SLOrder_len == 2)
+    {
+        string subject;
+        subject = Symbol();
+        subject += "2 SL hit\n";
+
+        string content;
+        for (int i = 0; i < m_SLOrder_len; i++)
+        {
+            content += LimitOrderToString(m_SLOrder[i]);
+            content += "\n";
+        }
+        PrintFormat("%s", content);
+        PrintFormat("SendMail is called");
+
+        if (!SendMail(subject, content))
+        {
+            PrintFormat("SendMail error %d", GetLastError());
+        }
+    }
+    else if (m_SLOrder_len >= 3)
+    {
+        m_isRunEA = false;
+        PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
+        PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
+        PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
+        PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
+        m_tracker.RemoveLimitOrder();
+    }
+}
+
+void SRLineManager::ResetSLRecord()
+{
+    PrintFormat("ResetSLRecord()");
+    m_SLOrder_len = 0;
 }

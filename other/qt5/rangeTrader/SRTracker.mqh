@@ -39,6 +39,7 @@ public:
     void MakeAnOrder(int Idx);
     bool HasNextOrder();
     LimitOrder GetNextLimitOrder();
+    LimitOrder GetHitOrder();
     int IsTP_SL_Hit(const double& lastPrice, ORDER_HIT_TYPE& outHitType);
     bool IsEmptyOrder();
     void ReFillOrder();
@@ -207,4 +208,9 @@ void SRTracker::DebugPrint()
     {
         PrintFormat("%s", LimitOrderToString(m_ActivatedStack[i]));
     }
+}
+
+LimitOrder SRTracker::GetHitOrder()
+{
+    return m_hitOrder;
 }
