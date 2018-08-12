@@ -18,6 +18,7 @@ void MovingClose::InitComponent(const std::string& dataFile, const std::string& 
     m_dataFile = dataFile;
     m_movingAverageFile = resultFile + ".movingAvg.csv";
     m_slopePDFFile = resultFile + ".slopePDF.csv";
+    m_diffPDFFile = resultFile + ".diffPDF.csv";
     m_tradeData = Common::GetOHLCFrom(m_dataFile);
     m_period = 5; // 5 bars period
 
@@ -30,12 +31,14 @@ void MovingClose::Main()
 {
     MakeMovingAverage();
     MakeMVSlopePDF();
+    MakeMVDiffPDF();
 }
 
 void MovingClose::PrintResult()
 {
     PrintMovingAverage();
     PrintMVSlopePDF();
+    PrintdiffPDF();
 }
 
 int MovingClose::periodDirection(size_t periodStart, size_t periodEnd)
@@ -106,6 +109,21 @@ void MovingClose::MakeMVSlopePDF()
     }
 }
 
+void MovingClose::MakeMVDiffPDF()
+{
+    for (size_t i = 1; i < m_mvAvg.size(); i++)
+    {
+        if (m_mvAvg[i-1] == 0 || m_mvAvg[i] == 0)
+            continue;
+        int diff = m_mvAvg[i-1] - m_mvAvg[i];
+        auto it = m_diffPDF.find(diff);
+        if (it == m_diffPDF.end())
+            m_diffPDF.insert(std::make_pair(diff, 1));
+        else
+            it->second++;
+    }
+}
+
 void MovingClose::PrintMVSlopePDF()
 {
     std::ofstream FH(m_slopePDFFile.c_str());
@@ -122,6 +140,16 @@ void MovingClose::PrintMovingAverage()
     for (size_t i = 0; i < m_mvAvg.size(); i++)
     {
         FH << m_mvAvg[i] << std::endl;
+    }
+    FH.close();
+}
+
+void MovingClose::PrintdiffPDF()
+{
+    std::ofstream FH(m_diffPDFFile.c_str());
+    for (auto it = m_diffPDF.begin(); it != m_diffPDF.end(); it++)
+    {
+        FH << Common::DenormalizeDouble(it->first, m_tradeData[0].digits) << "," << it->second << std::endl;
     }
     FH.close();
 }

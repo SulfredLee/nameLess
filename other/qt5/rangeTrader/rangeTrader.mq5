@@ -74,6 +74,7 @@ void OnTick()
         MqlTradeResult result;
         ZeroMemory(result);
         //--- send the request
+        ResetLatError();
         if(!OrderSend(request,result))
             PrintFormat("OrderSend error %d", GetLastError());     // if unable to send the request, output the error code
         //--- information about the operation

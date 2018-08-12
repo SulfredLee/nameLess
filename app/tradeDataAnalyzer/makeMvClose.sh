@@ -6,6 +6,7 @@ tradingFiles=($(ls ${dataRoot}/*EURJPY*M1*.csv))
 outputFolder="EURJPY_MVCLS"
 fileExt="*.slopePDF.csv"
 fileExt002="*.movingAvg.csv"
+fileExt003="*.diffPDF.csv"
 
 for tradingFile in "${tradingFiles[@]}"
 do
@@ -13,7 +14,7 @@ do
     ${app} -f ${tradingFile} -o ${outputFileName} -t movingClose
 done
 
-distributionFiles=($(ls ${fileExt}))
+distributionFiles=($(ls ${fileExt} ${fileExt003}))
 
 for distributionFile in "${distributionFiles[@]}"
 do
@@ -27,4 +28,5 @@ fi
 
 mv ${fileExt} ${outputFolder}
 mv ${fileExt002} ${outputFolder}
+mv ${fileExt003} ${outputFolder}
 mv *png ${outputFolder}
