@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "InputParser.h"
 #include "pdfBuilder.h"
+#include "movingClose.h"
 #include "app.h"
 int main(int argc, char* argv[])
 {
@@ -20,6 +21,8 @@ int main(int argc, char* argv[])
     app* myApp = nullptr;
     if (appType == "pdfBuilder")
         myApp = new pdfBuilder;
+    else if (appType == "movingClose")
+        myApp = new MovingClose;
 
     myApp->InitComponent(dataFile, resultFile);
     myApp->Main();
