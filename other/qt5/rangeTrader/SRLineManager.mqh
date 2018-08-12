@@ -65,6 +65,7 @@ void SRLineManager::InitComponent(string inSRFile)
 {
     PrintFormat("InitComponent");
     m_SRLines_len = GetNumberOfSRLines(inSRFile);
+    PrintFormat("m_SRLines_len: %d", m_SRLines_len);
     ArrayResize(m_SRLines, m_SRLines_len);
 
     InitSRLines(inSRFile);
@@ -128,6 +129,8 @@ void SRLineManager::InitOrders()
 {
     m_SellLimitOrder_len = m_SRLines_len - 1;
     m_BuyLimitOrder_len = m_SRLines_len - 1;
+    PrintFormat("m_SellLimitOrder_len: %d, m_BuyLimitOrder_len: %d", m_SellLimitOrder_len, m_BuyLimitOrder_len);
+
     ArrayResize(m_SellLimitOrder, m_SellLimitOrder_len);
     ArrayResize(m_BuyLimitOrder, m_BuyLimitOrder_len);
     for (int i = 0 ; i < m_SRLines_len - 1; i++)
@@ -168,10 +171,12 @@ void SRLineManager::PrintOrderList(string outputFile)
     int fileHandle = FileOpen(m_outputFolder + "//" + outputFile, FILE_READ|FILE_WRITE|FILE_CSV);
     if(fileHandle != INVALID_HANDLE)
     {
+        PrintFormat("m_SellLimitOrder_len: %d, m_BuyLimitOrder_len: %d", m_SellLimitOrder_len, m_BuyLimitOrder_len);
         // CSV format : Sell limit, TP(Sell limit), SL(Sell limit), Buy limit, TP(Buy limit), SL(Buy limit)
         for (int i = 0; i < m_SellLimitOrder_len; i++)
         {
             FileWrite(fileHandle, m_SellLimitOrder[i].m_price, m_SellLimitOrder[i].m_TP, m_SellLimitOrder[i].m_SL, m_BuyLimitOrder[i].m_price, m_BuyLimitOrder[i].m_TP, m_BuyLimitOrder[i].m_SL);
+            PrintFormat("m_SellLimitOrder[i].m_price: %f, m_SellLimitOrder[i].m_TP: %f, m_SellLimitOrder[i].m_SL: %f, m_BuyLimitOrder[i].m_price: %f, m_BuyLimitOrder[i].m_TP: %f, m_BuyLimitOrder[i].m_SL: %f", m_SellLimitOrder[i].m_price, m_SellLimitOrder[i].m_TP, m_SellLimitOrder[i].m_SL, m_BuyLimitOrder[i].m_price, m_BuyLimitOrder[i].m_TP, m_BuyLimitOrder[i].m_SL);
         }
         //--- close the file
         FileClose(fileHandle);
@@ -217,7 +222,7 @@ void SRLineManager::OnTick(double lastPrice)
         PrintFormat("---------------------------------------------------");
         PrintFormat("---------------------------------------------------");
     }
-    else if (!m_isFirstHit)
+    if (!m_isFirstHit)
     {
         ORDER_HIT_TYPE orderHitType;
         hitIdx = m_tracker.IsTP_SL_Hit(m_lastPrice, orderHitType); // hit TP or SL
@@ -323,6 +328,7 @@ bool SRLineManager::InitTracker()
             break;
         }
     }
+    justBelow--; // alignment adjusting
     // add buy orders
     if (justBelow > -1)
     {
