@@ -37,6 +37,17 @@ NLTime::NLTime(const std::string& source, const std::string& format)
     SetFromString(source, format);
 }
 
+NLTime::NLTime(const NLTime& other)
+{
+    m_time.tm_year = other.m_time.tm_year;
+    m_time.tm_mon =  other.m_time.tm_mon;
+    m_time.tm_mday = other.m_time.tm_mday;
+    m_time.tm_hour = other.m_time.tm_hour;
+    m_time.tm_min =  other.m_time.tm_min;
+    m_time.tm_sec =  other.m_time.tm_sec;
+    mktime(&m_time);
+}
+
 NLTime::~NLTime()
 {}
 

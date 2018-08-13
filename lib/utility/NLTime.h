@@ -12,6 +12,7 @@ class NLTime
     NLTime(int Y, int Mon, int D, int H, int Min, int S);
     NLTime(int&& Y, int&& Mon, int&& D, int&& H, int&& Min, int&& S);
     NLTime(const std::string& source, const std::string& format);
+    NLTime(const NLTime& other);
     ~NLTime();
 
     struct tm GetRawData();
