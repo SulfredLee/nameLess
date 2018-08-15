@@ -9,15 +9,16 @@ input int    StartHour = 7;
 input int    EndHour   = 19;
 input double Lots      = 0.1;
 
-int hMA_5min; // hMA: Moving Average indicator's handle
-double MA_5min[];
-int MA_5min_len;
+int hMA_5min, hMA_10min, hMA_20min; // hMA: Moving Average indicator's handle
+double MA_5min[], MA_10min[], MA_20min[];
+int MA_5min_len, MA_10min_len, MA_20min_len;
 int countTick;
 bool isInitFinished;
 bool isWaiting;
 int SLPoint, TPPoint;
 int SLPipe, TPPipe;
 int MAPeriod;
+int fileHandle;
 
 void DebugPrintRequest(const MqlTradeRequest& inRequest)
 {
@@ -139,6 +140,8 @@ void OnInit()
 
     MAPeriod = 5;
     MA_5min_len = 5;
+    MA_10min_len = 5;
+    MA_20min_len = 5;
     countTick = 0;
     isInitFinished = false;
     isWaiting = true;
@@ -157,6 +160,13 @@ void OnInit()
 
     hMA_5min = iMA(Symbol(), PERIOD_M1, MAPeriod, 0, MODE_SMA, PRICE_CLOSE);
     ArrayResize(MA_5min, MA_5min_len);
+    hMA_10min = iMA(Symbol(), PERIOD_M10, MAPeriod, 0, MODE_SMA, PRICE_CLOSE);
+    ArrayResize(MA_10min, MA_10min_len);
+    hMA_20min = iMA(Symbol(), PERIOD_M20, MAPeriod, 0, MODE_SMA, PRICE_CLOSE);
+    ArrayResize(MA_20min, MA_20min_len);
+
+    string outputFile = Symbol() + ".MA.csv";
+    fileHandle = FileOpen("Data//" + outputFile, FILE_READ|FILE_WRITE|FILE_CSV);
 
     PrintFormat("SLPipe: %f, SLPoint: %f, Digits(): %d, Point(): %f", SLPipe, SLPoint, Digits(), Point());
 }
@@ -165,25 +175,31 @@ void OnInit()
 //+------------------------------------------------------------------+
 void OnTick()
 {
-    countTick++;
     bool isStart = isMinStart();
     if (isWaiting && isStart)
     {
         isWaiting = false;
+        countTick++;
         CopyBuffer(hMA_5min, 0, 0, MA_5min_len, MA_5min); // MA_5min[0]: last min data, MA_5min[1]: current min data
-        bool isBuy = false;
-        if (isConfidence(isBuy))
+        CopyBuffer(hMA_10min, 0, 0, MA_10min_len, MA_10min);
+        CopyBuffer(hMA_20min, 0, 0, MA_20min_len, MA_20min);
+        if(fileHandle != INVALID_HANDLE)
         {
-            PrintDebug_Confidence();
-            if (isBuy)
-            {
-                MakeABuyRequest();
-            }
-            else
-            {
-                MakeASellRequest();
-            }
+            FileWrite(fileHandle, countTick, MA_5min[MA_5min_len-2], MA_10min[MA_10min_len-2], MA_20min[MA_20min_len-2]);
         }
+        // bool isBuy = false;
+        // if (isConfidence(isBuy))
+        // {
+        //     PrintDebug_Confidence();
+        //     if (isBuy)
+        //     {
+        //         MakeABuyRequest();
+        //     }
+        //     else
+        //     {
+        //         MakeASellRequest();
+        //     }
+        // }
         // PrintDebug_MA_5min();
     }
     if (!isStart)
@@ -196,5 +212,11 @@ void OnDeinit(const int reason)
 {
     IndicatorRelease(hMA_5min);
     ArrayFree(MA_5min);
+    IndicatorRelease(hMA_10min);
+    ArrayFree(MA_10min);
+    IndicatorRelease(hMA_20min);
+    ArrayFree(MA_20min);
+
+    FileClose(fileHandle);
 }
 //+------------------------------------------------------------------+

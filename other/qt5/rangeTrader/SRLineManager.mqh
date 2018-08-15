@@ -1,6 +1,7 @@
 #property copyright "Copyright 2018, Damage Company"
 #include "SRTracker.mqh"
 #include "LimitOrder.mqh"
+#include "triggerManager.mqh"
 
 class SRLineManager
 {
@@ -24,9 +25,11 @@ private:
     SRTracker m_tracker;
     bool m_isFirstHit;
     bool m_isRunEA;
-    int m_digitShift;
+    double m_digitShift;
+    double m_priceStep;
+    TriggerManager m_triggerManager;
 public:
-    void SRLineManager()
+    SRLineManager()
     {
         m_inputFolder = "Data";
         m_outputFolder = "Data";
@@ -39,10 +42,13 @@ public:
         m_isFirstHit = true;
         m_isRunEA = true;
         m_digitShift = MathPow(10, Digits());
+        m_priceStep = 1 / m_digitShift;
 
+        PrintFormat("m_priceStep: %f", m_priceStep);
         m_tracker.InitComponent(m_SellLimitLayers + m_BuyLimitLayers);
+        m_triggerManager.InitComponent("rangeTrader.config.ini");
     };
-    void ~SRLineManager()
+    ~SRLineManager()
     {
         ArrayFree(m_SRLines);
         ArrayFree(m_SellLimitOrder);
@@ -198,8 +204,9 @@ void SRLineManager::PrintOrderList(string outputFile)
 
 void SRLineManager::OnTick(double lastPrice)
 {
-    if (!m_isRunEA)
+    if (!m_isRunEA && !m_triggerManager.IsTriggerOn(lastPrice))
         return;
+    m_isRunEA = true;
     if (m_lastPrice == -1)
     {
         m_lastPrice = lastPrice;
@@ -239,6 +246,7 @@ void SRLineManager::OnTick(double lastPrice)
         hitIdx = m_tracker.IsTP_SL_Hit(m_lastPrice, orderHitType); // hit TP or SL
         if (hitIdx != -1)
         {
+            PrintFormat("m_lastPrice: %f", m_lastPrice);
             if (m_tracker.IsEmptyOrder())
             {
                 PrintFormat("IsEmptyOrder()----------------------------------------------");
@@ -254,7 +262,6 @@ void SRLineManager::OnTick(double lastPrice)
                 ResetSLRecord();
                 m_tracker.RefreshOrder();
                 PrintFormat("Second After InitTracker-------------------------------------");
-                PrintFormat("m_lastPrice: %f", m_lastPrice);
                 m_tracker.DebugPrint();
                 PrintFormat("---------------------------------------------------");
                 PrintFormat("---------------------------------------------------");
@@ -267,7 +274,6 @@ void SRLineManager::OnTick(double lastPrice)
 
                 m_tracker.ReFillOrder();
                 PrintFormat("After ReFillOrder");
-                PrintFormat("m_lastPrice: %f", m_lastPrice);
                 m_tracker.DebugPrint();
                 PrintFormat("---------------------------------------------------");
                 PrintFormat("---------------------------------------------------");
@@ -279,7 +285,6 @@ void SRLineManager::OnTick(double lastPrice)
                 SLEmailAlert(hitIdx);
                 m_tracker.RemoveLimitOrder();
                 PrintFormat("After Remove Limit Order");
-                PrintFormat("m_lastPrice: %f", m_lastPrice);
                 m_tracker.DebugPrint();
                 PrintFormat("---------------------------------------------------");
                 PrintFormat("---------------------------------------------------");
@@ -450,7 +455,8 @@ void SRLineManager::SLEmailAlert(int hitIdx)
         PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
         PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
         PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
-        m_tracker.RemoveLimitOrder();
+        RemoveRemainingOrder();
+        m_tracker.Reset();
     }
 }
 

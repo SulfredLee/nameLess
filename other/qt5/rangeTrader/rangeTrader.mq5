@@ -14,6 +14,7 @@ input double Lots      = 0.1;
 
 int hMA,hCI; // hMA: Moving Average indicator's handle, hCI: custom indicator's handle
 string SRFile = Symbol() + ".csv";
+string ConfigFile = Symbol() + ".config.csv";
 string OrderListFile = Symbol() + ".orderList.csv";
 
 SRLineManager srLineManager;
@@ -74,7 +75,6 @@ void OnTick()
         MqlTradeResult result;
         ZeroMemory(result);
         //--- send the request
-        ResetLatError();
         if(!OrderSend(request,result))
             PrintFormat("OrderSend error %d", GetLastError());     // if unable to send the request, output the error code
         //--- information about the operation

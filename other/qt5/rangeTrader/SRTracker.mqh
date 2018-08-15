@@ -2,6 +2,8 @@
 
 #include "LimitOrder.mqh"
 
+#define EPSILON 0.00000000001
+
 enum ORDER_HIT_TYPE
 {
     TP_HIT = 0,
@@ -51,6 +53,7 @@ public:
     void DebugPrint();
 private:
     void RemoveFromArray(LimitOrder& array[], int Idx, int array_len);
+    bool EqualDoubles(double d1,double d2,double epsilon);
 };
 
 void SRTracker::InitComponent(int orderStack_len)
@@ -78,12 +81,12 @@ int SRTracker::IsLimit_Hit(const double& lastPrice)
 {
     for (int i = 0; i < m_ActivatedStack_len; i++)
     {
-        if (m_ActivatedStack[i].m_price == lastPrice)
+        if (EqualDoubles(m_ActivatedStack[i].m_price, lastPrice, EPSILON))
             return -1;
     }
     for (int i = 0; i < m_curLimitStack_len; i++)
     {
-        if (m_curLimitStack[i].m_price == lastPrice)
+        if (EqualDoubles(m_curLimitStack[i].m_price, lastPrice, EPSILON))
             return i;
     }
     return -1;
@@ -93,9 +96,9 @@ int SRTracker::IsTP_SL_Hit(const double& lastPrice, ORDER_HIT_TYPE& outHitType)
 {
     for (int i = 0; i < m_ActivatedStack_len; i++)
     {
-        if (m_ActivatedStack[i].m_TP == lastPrice || m_ActivatedStack[i].m_SL == lastPrice)
+        if (EqualDoubles(m_ActivatedStack[i].m_TP, lastPrice, EPSILON) || EqualDoubles(m_ActivatedStack[i].m_SL, lastPrice, EPSILON))
         {
-            if (m_ActivatedStack[i].m_TP == lastPrice)
+            if (EqualDoubles(m_ActivatedStack[i].m_TP, lastPrice, EPSILON))
                 outHitType = TP_HIT;
             else
                 outHitType = SL_HIT;
@@ -183,7 +186,7 @@ void SRTracker::RemoveLimitOrder()
 {
     for (int i = 0; i < m_curLimitStack_len; i++)
     {
-        if (m_hitOrder.m_price == m_curLimitStack[i].m_price)
+        if (EqualDoubles(m_hitOrder.m_price, m_curLimitStack[i].m_price, EPSILON))
         {
             RemoveFromArray(m_curLimitStack, i, m_curLimitStack_len--);
             return;
@@ -213,4 +216,15 @@ void SRTracker::DebugPrint()
 LimitOrder SRTracker::GetHitOrder()
 {
     return m_hitOrder;
+}
+
+bool SRTracker::EqualDoubles(double d1, double d2, double epsilon)
+{
+    if(epsilon < 0)
+        epsilon = -epsilon;
+
+    if (MathAbs(d1 - d2) <= epsilon)
+        return true;
+    else
+        return false;
 }

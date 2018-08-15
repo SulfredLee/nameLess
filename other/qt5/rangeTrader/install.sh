@@ -2,7 +2,7 @@
 # headerFiles=( CFractalPoint.mqh cisnewbar.mqh )
 # expertFiles=( channelsplotter.mq5 testFractalPoint.mq5 )
 # indicatorFiles=( x-bars_fractals.mq5 testIndicator.mq5 )
-headerFiles=( SRLineManager.mqh SRTracker.mqh LimitOrder.mqh )
+headerFiles=( SRLineManager.mqh SRTracker.mqh LimitOrder.mqh triggerManager.mqh )
 expertFiles=( rangeTrader.mq5 )
 indicatorFiles=( )
 dstPath="/mnt/c/Users/sflee/AppData/Roaming/MetaQuotes/Terminal/D0E8209F77C8CF37AD8BF550E51FF075/MQL5"
