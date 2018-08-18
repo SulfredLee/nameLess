@@ -183,8 +183,8 @@ openssl: .openssl
 	git clone https://github.com/google/protobuf.git
 	sudo mkdir -p /usr/local/protobuf/3.6.0
 	cd protobuf; \
-	./autogen.sh \
-	./configure --prefix=/usr/local/protobuf/3.6.0 \
+	./autogen.sh; \
+	./configure --prefix=/usr/local/protobuf/3.6.0; \
 	make -j 8; \
 	sudo make install;
 	touch $@
