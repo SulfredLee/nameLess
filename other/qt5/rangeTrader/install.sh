@@ -5,6 +5,7 @@
 headerFiles=( SRLineManager.mqh SRTracker.mqh LimitOrder.mqh triggerManager.mqh )
 expertFiles=( rangeTrader.mq5 )
 indicatorFiles=( )
+sourceFiles=($(ls *mqh *mq5))
 dstPath="/mnt/c/Users/sflee/AppData/Roaming/MetaQuotes/Terminal/D0E8209F77C8CF37AD8BF550E51FF075/MQL5"
 sourcePath="$PWD"
 
@@ -28,6 +29,11 @@ actionProxy() {
     action="${args[0]}"
     folder="${args[1]}"
     files=("${args[@]:2}")
+
+    if [ ! -d ${dstPath}/${folder} ]; then
+        mkdir -p ${dstPath}/${folder}
+    fi
+
     for file in "${files[@]}"
     do
         if [ "${action}" == "cp" ]; then
@@ -39,11 +45,13 @@ actionProxy() {
 }
 
 if [ "${ACTION}" == "install" ]; then
-    actionProxy "cp" "Include" "${headerFiles[@]}"
-    actionProxy "cp" "Experts" "${expertFiles[@]}"
-    actionProxy "cp" "Indicators" "${indicatorFiles[@]}"
+    # actionProxy "cp" "Include" "${headerFiles[@]}"
+    # actionProxy "cp" "Experts" "${expertFiles[@]}"
+    # actionProxy "cp" "Indicators" "${indicatorFiles[@]}"
+    actionProxy "cp" "Experts/rangeTrader" "${sourceFiles[@]}"
 elif [ "${ACTION}" == "clean" ]; then
-    actionProxy "rm" "Include" "${headerFiles[@]}"
-    actionProxy "rm" "Experts" "${expertFiles[@]}"
-    actionProxy "rm" "Indicators" "${indicatorFiles[@]}"
+    # actionProxy "rm" "Include" "${headerFiles[@]}"
+    # actionProxy "rm" "Experts" "${expertFiles[@]}"
+    # actionProxy "rm" "Indicators" "${indicatorFiles[@]}"
+    actionProxy "rm" "Experts/rangeTrader" "${sourceFiles[@]}"
 fi

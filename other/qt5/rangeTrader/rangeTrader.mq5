@@ -10,7 +10,7 @@ input int    EndHour   = 19;
 input int    MAper     = 240;
 input double Lots      = 0.1;
 
-#include "../Include/SRLineManager.mqh"
+#include "SRLineManager.mqh"
 
 int hMA,hCI; // hMA: Moving Average indicator's handle, hCI: custom indicator's handle
 string SRFile = Symbol() + ".csv";
