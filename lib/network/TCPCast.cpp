@@ -24,7 +24,7 @@ TCPCast::~TCPCast()
 
 TCPCast::TCPStatus TCPCast::InitComponent(const std::string& ifAddress, const short ifPort, bool isClient, const int numClients)
 {
-    m_ifAddress = m_ifAddress;
+    m_ifAddress = ifAddress;
     m_isClient = isClient;
     if (m_isClient)
     {

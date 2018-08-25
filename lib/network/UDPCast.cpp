@@ -14,14 +14,17 @@
 #include <iostream>
 
 UDPCast::UDPCast()
-{}
+{
+}
 
 UDPCast::~UDPCast()
-{}
+{
+    Stop();
+}
 
 UDPCast::UDPStatus UDPCast::InitComponent(const std::string& ifAddress, const short ifPort, bool isClient)
 {
-    m_ifAddress = m_ifAddress;
+    m_ifAddress = ifAddress;
     m_ifPort = ifPort;
     m_isClient = isClient;
     return Start();
@@ -32,7 +35,7 @@ UDPCast::UDPStatus UDPCast::Start()
     // create UDP socket
     if ((m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return UDPStatus::ERROR;
     }
     // set address and port for local address
@@ -46,7 +49,7 @@ UDPCast::UDPStatus UDPCast::Start()
         // bind local address
         if (bind(m_socket, (struct sockaddr *)&local_addr, sizeof(local_addr)) < 0)
         {
-            std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+            LOGMSG_ERROR("errono: %s", strerror(errno));
             return UDPStatus::ERROR;
         }
     }
@@ -65,7 +68,7 @@ UDPCast::UDPStatus UDPCast::SetTTL(int ttl)
 {
     if (setsockopt(m_socket, IPPROTO_IP, IP_MULTICAST_TTL, (char *)&ttl, sizeof(ttl)) < 0)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << " ttl: " << ttl << std::endl;
+        LOGMSG_ERROR("errono: %s ttl: %d", strerror(errno), ttl);
         return UDPStatus::ERROR;
     }
     return UDPStatus::SUCCESS;
@@ -83,7 +86,7 @@ UDPCast::UDPStatus UDPCast::Send(std::string& toAddress, short& toPort, char con
 
     if (sendto(m_socket, sendMsg, msgLength, 0, (sockaddr*)&to_addr, sizeof(to_addr)) != msgLength)
     {
-        std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] errono " << strerror(errno) << std::endl;
+        LOGMSG_ERROR("errono: %s", strerror(errno));
         return UDPStatus::ERROR;
     }
     return UDPStatus::SUCCESS;
