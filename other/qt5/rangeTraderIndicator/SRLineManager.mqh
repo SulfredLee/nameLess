@@ -2,8 +2,7 @@
 #include "SRTracker.mqh"
 #include "LimitOrder.mqh"
 #include "triggerManager.mqh"
-
-#define EXPERT_MAGIC 338866   // MagicNumber of the expert
+#include "common.mqh"
 
 class SRLineManager
 {
@@ -31,7 +30,7 @@ private:
     double m_priceStep;
     TriggerManager m_triggerManager;
 public:
-    SRLineManager()
+    SRLineManager(int BL_LayersLimit, int SL_LayersLimit)
     {
         m_inputFolder = "Data";
         m_outputFolder = "Data";
@@ -39,8 +38,8 @@ public:
         m_TPOffset = 0.05;
         m_SLOffset = 0.1;
         m_lastPrice = -1;
-        m_SellLimitLayers = 4;
-        m_BuyLimitLayers = 4;
+        m_SellLimitLayers = SL_LayersLimit;
+        m_BuyLimitLayers = BL_LayersLimit;
         m_isFirstHit = true;
         m_isRunEA = true;
         m_digitShift = MathPow(10, Digits());

@@ -1,7 +1,7 @@
 #!/bin/bash
 sourceFiles=($(ls *mqh *mq5))
 dstPath="/mnt/c/Users/sflee/AppData/Roaming/MetaQuotes/Terminal/D0E8209F77C8CF37AD8BF550E51FF075/MQL5"
-dstFolder="Experts/rangeTrader"
+appFolder="Indicators/tryIndicator"
 sourcePath="$PWD"
 
 # get input argument
@@ -40,7 +40,7 @@ actionProxy() {
 }
 
 if [ "${ACTION}" == "install" ]; then
-    actionProxy "cp" "${dstFolder}" "${sourceFiles[@]}"
+    actionProxy "cp" "${appFolder}" "${sourceFiles[@]}"
 elif [ "${ACTION}" == "clean" ]; then
-    actionProxy "rm" "${dstFolder}" "${sourceFiles[@]}"
+    actionProxy "rm" "${appFolder}" "${sourceFiles[@]}"
 fi
