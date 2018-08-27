@@ -19,7 +19,7 @@ extern "C"
     // Client, Server
     enum UDPStatus UDPCast_C_Send(struct UDPCast_C* pUDPCast, char const * const toAddress, int toAddressLen, short* toPort, char const * const sendMsg, int msgLength);
     enum UDPStatus UDPCast_C_SelectRead(struct UDPCast_C* pUDPCast, long uSec, long sec);
-    enum UDPStatus UDPCast_C_Recv(struct UDPCast_C* pUDPCast, char* fromAddress, int* fromAddressLen, short* fromPort, char** receiveBuffer, int receiveBufferLen, int* byteRecv);
+    enum UDPStatus UDPCast_C_Recv(struct UDPCast_C* pUDPCast, char* fromAddress, int* fromAddressLen, short* fromPort, char* receiveBuffer, int receiveBufferLen, int* byteRecv);
 
     // private
     static enum UDPStatus UDPCast_C_Start(struct UDPCast_C* pUDPCast);

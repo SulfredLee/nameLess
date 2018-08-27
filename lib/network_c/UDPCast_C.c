@@ -74,8 +74,10 @@ enum UDPStatus UDPCast_C_Send(struct UDPCast_C* pUDPCast, char const * const toA
     if (sendto(pUDPCast->m_socket, sendMsg, msgLength, 0, (struct sockaddr*)&to_addr, sizeof(to_addr)) != msgLength)
     {
         fprintf(stderr, "[%s:%d] errono %s\n", __FUNCTION__, __LINE__, strerror(errno));
+        Unlocak_DefaultMutex_C(pUDPCast->m_pSendLock);
         return ERROR;
     }
+    Unlocak_DefaultMutex_C(pUDPCast->m_pSendLock);
     return SUCCESS;
 }
 
@@ -111,12 +113,12 @@ enum UDPStatus UDPCast_C_SelectRead(struct UDPCast_C* pUDPCast, long uSec, long 
     }
 }
 
-enum UDPStatus UDPCast_C_Recv(struct UDPCast_C* pUDPCast, char* fromAddress, int* fromAddressLen, short* fromPort, char** receiveBuffer, int receiveBufferLen, int* byteRecv)
+enum UDPStatus UDPCast_C_Recv(struct UDPCast_C* pUDPCast, char* fromAddress, int* fromAddressLen, short* fromPort, char* receiveBuffer, int receiveBufferLen, int* byteRecv)
 {
     struct sockaddr_in remoteInfo;
     int infoLength = sizeof(remoteInfo);
     memset(&remoteInfo, 0, infoLength);
-    *byteRecv = recvfrom(pUDPCast->m_socket, *receiveBuffer, receiveBufferLen, 0, (struct sockaddr*)&remoteInfo, (socklen_t*)&infoLength);
+    *byteRecv = recvfrom(pUDPCast->m_socket, receiveBuffer, receiveBufferLen, 0, (struct sockaddr*)&remoteInfo, (socklen_t*)&infoLength);
     if (byteRecv <= 0)
     {
         fprintf(stderr, "[%s:%d] errono %s\n", __FUNCTION__, __LINE__, strerror(errno));
