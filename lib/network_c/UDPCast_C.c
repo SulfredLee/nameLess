@@ -41,7 +41,9 @@ void freeUDPCast_C(struct UDPCast_C** pUDPCast)
 
 enum UDPStatus UDPCast_C_InitComponent(struct UDPCast_C* pUDPCast, char const * const ifAddress, int ifAddressLen, short ifPort, int isClient)
 {
-    if (ifAddressLen < 16)
+    if (!pUDPCast)
+        return ERROR;
+    if (ifAddressLen < 16 && ifAddress)
         strcpy(pUDPCast->m_ifAddress, ifAddress);
     else
         return ERROR;
@@ -52,6 +54,8 @@ enum UDPStatus UDPCast_C_InitComponent(struct UDPCast_C* pUDPCast, char const * 
 // Set time to live
 enum UDPStatus UDPCast_C_SetTTL(struct UDPCast_C* pUDPCast, int ttl)
 {
+    if (!pUDPCast)
+        return ERROR;
     if (setsockopt(pUDPCast->m_socket, IPPROTO_IP, IP_MULTICAST_TTL, (char *)&ttl, sizeof(ttl)) < 0)
     {
         fprintf(stderr, "[%s:%d] errono %s\n", __FUNCTION__, __LINE__, strerror(errno));
@@ -61,13 +65,17 @@ enum UDPStatus UDPCast_C_SetTTL(struct UDPCast_C* pUDPCast, int ttl)
 }
 
 // Client, Server
-enum UDPStatus UDPCast_C_Send(struct UDPCast_C* pUDPCast, char const * const toAddress, int toAddressLen, short* toPort, char const * const sendMsg, int msgLength)
+enum UDPStatus UDPCast_C_Send(struct UDPCast_C* pUDPCast, char const * const toAddress, int toAddressLen, short toPort, char const * const sendMsg, int msgLength)
 {
+    if (!pUDPCast || !toAddress || toAddressLen <= 0)
+        return ERROR;
+    if (!sendMsg || msgLength <= 0)
+        return SUCCESS;
     struct sockaddr_in to_addr;
 
     to_addr.sin_family = AF_INET;
     to_addr.sin_addr.s_addr = inet_addr(toAddress);
-    to_addr.sin_port = htons(*toPort);
+    to_addr.sin_port = htons(toPort);
 
     Lock_DefaultMutex_C(pUDPCast->m_pSendLock);
 
@@ -83,6 +91,8 @@ enum UDPStatus UDPCast_C_Send(struct UDPCast_C* pUDPCast, char const * const toA
 
 enum UDPStatus UDPCast_C_SelectRead(struct UDPCast_C* pUDPCast, long uSec, long sec)
 {
+    if (!pUDPCast)
+        return ERROR;
     fd_set fdread;
     int ret;
 
@@ -115,6 +125,8 @@ enum UDPStatus UDPCast_C_SelectRead(struct UDPCast_C* pUDPCast, long uSec, long 
 
 enum UDPStatus UDPCast_C_Recv(struct UDPCast_C* pUDPCast, char* fromAddress, int* fromAddressLen, short* fromPort, char* receiveBuffer, int receiveBufferLen, int* byteRecv)
 {
+    if (!pUDPCast || !fromAddress || !fromAddressLen || !fromPort || !receiveBuffer || receiveBufferLen <= 0 || !byteRecv)
+        return ERROR;
     struct sockaddr_in remoteInfo;
     int infoLength = sizeof(remoteInfo);
     memset(&remoteInfo, 0, infoLength);
@@ -134,6 +146,8 @@ enum UDPStatus UDPCast_C_Recv(struct UDPCast_C* pUDPCast, char* fromAddress, int
 // private
 enum UDPStatus UDPCast_C_Start(struct UDPCast_C* pUDPCast)
 {
+    if (!pUDPCast)
+        return ERROR;
     // create UDP socket
     if ((pUDPCast->m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     {
@@ -163,5 +177,7 @@ enum UDPStatus UDPCast_C_Start(struct UDPCast_C* pUDPCast)
 
 void UDPCast_C_Stop(struct UDPCast_C* pUDPCast)
 {
+    if (!pUDPCast)
+        return;
     shutdown(pUDPCast->m_socket, 0x00);
 }

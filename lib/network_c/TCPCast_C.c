@@ -42,7 +42,9 @@ void freeTCPCast_C(struct TCPCast_C** pTCPCast)
 
 enum TCPStatus TCPCast_C_InitComponent(struct TCPCast_C* pTCPCast, char const * const ifAddress, int ifAddressLen, short ifPort, int isClient, const int numClients)
 {
-    if (ifAddressLen < 16)
+    if (!pTCPCast)
+        return ERROR;
+    if (ifAddressLen < 16 && ifAddress)
         strcpy(pTCPCast->m_ifAddress, ifAddress);
     else
         return ERROR;
@@ -62,6 +64,8 @@ enum TCPStatus TCPCast_C_InitComponent(struct TCPCast_C* pTCPCast, char const * 
 
 enum TCPStatus TCPCast_C_Start(struct TCPCast_C* pTCPCast)
 {
+    if (!pTCPCast)
+        return ERROR;
     // create TCP socket
     if ((pTCPCast->m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0)
     {
@@ -92,11 +96,15 @@ enum TCPStatus TCPCast_C_Start(struct TCPCast_C* pTCPCast)
 
 void TCPCast_C_Stop(struct TCPCast_C* pTCPCast)
 {
+    if (!pTCPCast)
+        return;
     shutdown(pTCPCast->m_socket, 0x00);
 }
 
 enum TCPStatus TCPCast_C_Connect(struct TCPCast_C* pTCPCast, char const * const toAddress, int toAddressLen, const short toPort)
 {
+    if (!pTCPCast || !toAddress || toAddressLen <= 0)
+        return ERROR;
     struct sockaddr_in toInfo;
     memset(&toInfo, 0, sizeof(struct sockaddr_in));
     toInfo.sin_family = PF_INET;
@@ -114,6 +122,10 @@ enum TCPStatus TCPCast_C_Connect(struct TCPCast_C* pTCPCast, char const * const 
 
 enum TCPStatus TCPCast_C_ClientSend(struct TCPCast_C* pTCPCast, char const * const sendMsg, const int msgLength)
 {
+    if (!pTCPCast)
+        return ERROR;
+    if (!sendMsg || msgLength <= 0)
+        return SUCCESS;
     if (send(pTCPCast->m_socket, sendMsg, msgLength, 0) != msgLength)
     {
         fprintf(stderr, "[%s:%d] errono %s\n", __FUNCTION__, __LINE__, strerror(errno));
@@ -124,6 +136,8 @@ enum TCPStatus TCPCast_C_ClientSend(struct TCPCast_C* pTCPCast, char const * con
 
 enum TCPStatus TCPCast_C_ClientRecv(struct TCPCast_C* pTCPCast, char* receiveBuffer, int receiveBufferLen, int* byteRecv)
 {
+    if (!pTCPCast || !receiveBuffer || receiveBufferLen <= 0 || !byteRecv)
+        return ERROR;
     if ((*byteRecv = recv(pTCPCast->m_socket, receiveBuffer, receiveBufferLen, MSG_WAITALL)) < 0)
     {
         fprintf(stderr, "[%s:%d] errono %s\n", __FUNCTION__, __LINE__, strerror(errno));
@@ -134,6 +148,8 @@ enum TCPStatus TCPCast_C_ClientRecv(struct TCPCast_C* pTCPCast, char* receiveBuf
 
 int TCPCast_C_Accept(struct TCPCast_C* pTCPCast)
 {
+    if (!pTCPCast)
+        return -1;
     struct sockaddr_in clientInfo;
     int infoLength = sizeof(clientInfo);
     memset(&clientInfo, 0, infoLength);
@@ -145,6 +161,10 @@ int TCPCast_C_Accept(struct TCPCast_C* pTCPCast)
 
 enum TCPStatus TCPCast_C_ServerSend(struct TCPCast_C* pTCPCast, int clientHandle, char const * const sendMsg, const int msgLength)
 {
+    if (!pTCPCast)
+        return ERROR;
+    if (!sendMsg || msgLength <= 0)
+        return SUCCESS;
     Lock_DefaultMutex_C(pTCPCast->m_pSendLock);
 
     if (send(clientHandle, sendMsg, msgLength, 0) != msgLength)
@@ -159,6 +179,8 @@ enum TCPStatus TCPCast_C_ServerSend(struct TCPCast_C* pTCPCast, int clientHandle
 
 enum TCPStatus TCPCast_C_ServerRecv(struct TCPCast_C* pTCPCast, int clientHandle, char* receiveBuffer, int receiveBufferLen, int* byteRecv)
 {
+    if (!pTCPCast || !receiveBuffer || receiveBufferLen <= 0 || !byteRecv)
+        return ERROR;
     if ((*byteRecv = recv(clientHandle, receiveBuffer, receiveBufferLen, MSG_WAITALL)) < 0)
     {
         fprintf(stderr, "[%s:%d] errono %s\n", __FUNCTION__, __LINE__, strerror(errno));

@@ -39,7 +39,9 @@ void freeMCast_C(struct MCast_C** pMCast)
 
 enum MCStatus MCast_C_InitComponent(struct MCast_C* pMCast, char const * const ifAddress, int ifAddressLen, short ifPort)
 {
-    if (ifAddressLen < 16)
+    if (!pMCast)
+        return ERROR;
+    if (ifAddressLen < 16 && ifAddress)
         strcpy(pMCast->m_ifAddress, ifAddress);
     else
         return ERROR;
@@ -49,6 +51,8 @@ enum MCStatus MCast_C_InitComponent(struct MCast_C* pMCast, char const * const i
 
 enum MCStatus MCast_C_Start(struct MCast_C* pMCast)
 {
+    if (!pMCast)
+        return ERROR;
     // create UDP socket
     if ((pMCast->m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     {
@@ -84,11 +88,17 @@ enum MCStatus MCast_C_Start(struct MCast_C* pMCast)
 
 void MCast_C_Stop(struct MCast_C* pMCast)
 {
+    if (!pMCast)
+        return;
     shutdown(pMCast->m_socket, 0x00);
 }
 
 enum MCStatus MCast_C_JoinGroup(struct MCast_C* pMCast, char const * const grpAddress, int grpAddressLen)
 {
+    if (!pMCast)
+        return ERROR;
+    if (!grpAddress)
+        return SUCCESS;
     if (strcmp(grpAddress, "") == 0)
     {
         return SUCCESS;
@@ -114,6 +124,10 @@ enum MCStatus MCast_C_JoinGroup(struct MCast_C* pMCast, char const * const grpAd
 
 enum MCStatus MCast_C_LeaveGroup(struct MCast_C* pMCast, char const * const grpAddress, int grpAddressLen)
 {
+    if (!pMCast)
+        return ERROR;
+    if (!grpAddress)
+        return SUCCESS;
     if (strcmp(grpAddress, "") == 0)
     {
         return SUCCESS;
@@ -132,6 +146,8 @@ enum MCStatus MCast_C_LeaveGroup(struct MCast_C* pMCast, char const * const grpA
 
 enum MCStatus MCast_C_SelectRead(struct MCast_C* pMCast, long uSec, long sec)
 {
+    if (!pMCast || uSec < 0 || sec < 0)
+        return ERROR;
     fd_set fdread;
     int ret;
 
@@ -164,6 +180,8 @@ enum MCStatus MCast_C_SelectRead(struct MCast_C* pMCast, long uSec, long sec)
 
 enum MCStatus MCast_C_Recv(struct MCast_C* pMCast, char* receiveBuffer, int receiveBufferLen, char* fromAddress, int* fromAddressLen, short* fromPort, int* byteRecv)
 {
+    if (!pMCast || !receiveBuffer || receiveBufferLen <= 0 || !fromAddress || !fromAddressLen || !fromPort || !byteRecv)
+        return ERROR;
     struct sockaddr_in remoteInfo;
     int infoLength = sizeof(remoteInfo);
     memset(&remoteInfo, 0, infoLength);
@@ -181,6 +199,8 @@ enum MCStatus MCast_C_Recv(struct MCast_C* pMCast, char* receiveBuffer, int rece
 
 enum MCStatus MCast_C_SetTTL(struct MCast_C* pMCast, int ttl)
 {
+    if (!pMCast)
+        return ERROR;
     if (setsockopt(pMCast->m_socket, IPPROTO_IP, IP_MULTICAST_TTL, (char *)&ttl, sizeof(ttl)) < 0)
     {
         fprintf(stderr, "[%s:%d] errono %s\n", __FUNCTION__, __LINE__, strerror(errno));
@@ -191,6 +211,10 @@ enum MCStatus MCast_C_SetTTL(struct MCast_C* pMCast, int ttl)
 
 enum MCStatus MCast_C_Send(struct MCast_C* pMCast, char* toAddress, int toAddressLen, char const * const sendMsg, const int msgLength)
 {
+    if (!pMCast || !toAddress)
+        return ERROR;
+    if (!sendMsg || msgLength <= 0)
+        return SUCCESS;
     struct sockaddr_in group_addr;
 
     group_addr.sin_family = AF_INET;
