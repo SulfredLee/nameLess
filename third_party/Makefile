@@ -67,13 +67,17 @@ openssl: .openssl
 	touch $@
 
 .cscope:
+	if [ ! -e cscope-15.8b.tar.gz ]; \
+	then \
+		wget https://nchc.dl.sourceforge.net/project/cscope/cscope/15.8b/cscope-15.8b.tar.gz; \
+	fi;
 	tar zxf cscope-15.8b.tar.gz
 	sudo mkdir -p /usr/local/cscope/15.8b
 	cd cscope-15.8b; \
 	./configure --prefix=/usr/local/cscope/15.8b; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/cscope/15.8b/bin:$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/cscope/15.8b/bin:\$PATH" >> ~/.bashrc
 	touch $@
 
 .OpenCC:
@@ -84,7 +88,7 @@ openssl: .openssl
 	cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local/OpenCC ..; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/OpenCC/bin:$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/OpenCC/bin:\$PATH" >> ~/.bashrc
 	touch $@
 
 .ycmd:
@@ -98,27 +102,36 @@ openssl: .openssl
 # start emacs to complete the installation, view the steps from https://sulfredlee.blogspot.com/2018/06/spacemacs-as-c-ide.html
 .spacemacs:
 	git clone https://github.com/syl20bnr/spacemacs.git ~/.emacs.d
-	git clone https://github.com/SulfredLee/VIMConfig.git
+	sudo apt-get install meld
 	meld ./VIMConfig/spacemacs ~/.spacemacs # update the config
 
 .global:
+	if [ ! -e global-6.6.2.tar.gz ]; \
+	then \
+		wget https://ftp.gnu.org/pub/gnu/global/global-6.6.2.tar.gz; \
+	fi;
 	tar zxf global-6.6.2.tar.gz
 	sudo mkdir -p /usr/local/global/6.6.2
 	cd global-6.6.2; \
 	./configure --prefix=/usr/local/global/6.6.2; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/global/6.6.2/bin:$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/global/6.6.2/bin:\$PATH" >> ~/.bashrc
 	touch $@
 
 .emacs:
+	if [ ! -e emacs-26.1.tar.gz ]; \
+	then \
+		wget https://ftp.gnu.org/gnu/emacs/emacs-26.1.tar.gz; \
+	fi;
 	tar zxf emacs-26.1.tar.gz
+	sudo apt-get build-dep emacs24
 	sudo mkdir -p /usr/local/emacs/26.1
 	cd emacs-26.1; \
 	./configure --prefix=/usr/local/emacs/26.1; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/emacs/26.1/bin:$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/emacs/26.1/bin:\$PATH" >> ~/.bashrc
 	touch $@
 
 .ninja:
