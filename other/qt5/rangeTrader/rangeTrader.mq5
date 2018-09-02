@@ -5,7 +5,7 @@
 
 #include "SRLineManager.mqh"
 
-input double Lots      = 0.1;
+input double Lots      = 0.01;
 
 string SRFile = Symbol() + ".csv";
 string ConfigFile = Symbol() + ".config.csv";
