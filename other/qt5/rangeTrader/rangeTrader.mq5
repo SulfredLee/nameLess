@@ -33,6 +33,7 @@ void OnInit()
     PrintFormat("OnInit()");
     srLineManager.InitComponent(SRFile);
     srLineManager.PrintOrderList(OrderListFile); // for debug
+    srLineManager.RemoveRemainingOrder();
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
