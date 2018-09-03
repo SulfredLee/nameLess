@@ -63,6 +63,7 @@ public:
     MqlTradeRequest GetNextLimitRequest();
     void RemoveRemainingOrder();
     void SetIndicatorsLen(int BL_Indicators_len, int SL_Indicators_len);
+    void TestEmailAlert();
 
 private:
     int GetNumberOfSRLines(string inputFile);
@@ -407,8 +408,9 @@ void SRLineManager::RemoveRemainingOrder()
     {
         ulong  order_ticket = OrderGetTicket(i);                   // order ticket
         ulong  magic = OrderGetInteger(ORDER_MAGIC);               // MagicNumber of the order
+        string symbol = OrderGetString(ORDER_SYMBOL);
         //--- if the MagicNumber matches
-        if (magic == EXPERT_MAGIC)
+        if (magic == EXPERT_MAGIC && symbol == Symbol())
         {
             PrintFormat("Cleaning order %d", i);
             //--- zeroing the request and result values
@@ -436,7 +438,7 @@ void SRLineManager::SLEmailAlert(int hitIdx)
     {
         string subject;
         subject = Symbol();
-        subject += "2 SL hit\n";
+        subject += " 2 SL hit\n";
 
         string content;
         for (int i = 0; i < m_SLOrder_len; i++)
@@ -468,4 +470,25 @@ void SRLineManager::ResetSLRecord()
 {
     PrintFormat("ResetSLRecord()");
     m_SLOrder_len = 0;
+}
+
+void SRLineManager::TestEmailAlert()
+{
+    string subject;
+    subject = Symbol();
+    subject += " 2 SL hit\n";
+
+    string content = "testing email";
+    for (int i = 0; i < m_SLOrder_len; i++)
+    {
+        content += LimitOrderToString(m_SLOrder[i]);
+        content += "\n";
+    }
+    PrintFormat("%s", content);
+    PrintFormat("SendMail is called");
+
+    if (!SendMail(subject, content))
+    {
+        PrintFormat("SendMail error %d", GetLastError());
+    }
 }
