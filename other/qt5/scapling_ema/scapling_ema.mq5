@@ -104,6 +104,14 @@ void DebugPrint_5M_EMA()
     for (int i = 0; i < smallCheckRange.m_trendRange; i++)
         line += " " + DoubleToString(EMA_5M_21P[i]);
     PrintFormat(line);
+    line = "EMA_5M_13P";
+    for (int i = 0; i < smallCheckRange.m_trendRange; i++)
+        line += " " + DoubleToString(EMA_5M_13P[i]);
+    PrintFormat(line);
+    line = "EMA_5M_8P";
+    for (int i = 0; i < smallCheckRange.m_trendRange; i++)
+        line += " " + DoubleToString(EMA_5M_8P[i]);
+    PrintFormat(line);
 }
 void DebugPrint_5M_Bar()
 {
@@ -240,7 +248,7 @@ bool isBigTrendExist(TREND_TYPE trendType)
         int j = bigCheckRange.m_existRange - 1;
         for (int i = 0; i < bigCheckRange.m_existRange; i++)
         {
-            if (iLow(Symbol(), PERIOD_H1, j--) <= EMA_1H_8P[i])
+            if (iLow(Symbol(), PERIOD_H1, j--) <= EMA_1H_21P[i])
                 return false;
         }
         return true;
@@ -250,7 +258,7 @@ bool isBigTrendExist(TREND_TYPE trendType)
         int j = bigCheckRange.m_existRange - 1;
         for (int i = 0; i < bigCheckRange.m_existRange; i++)
         {
-            if (iHigh(Symbol(), PERIOD_H1, j--) >= EMA_1H_8P[i])
+            if (iHigh(Symbol(), PERIOD_H1, j--) >= EMA_1H_21P[i])
                 return false;
         }
         return true;
@@ -291,10 +299,11 @@ bool isTrendMatch(TREND_TYPE& trendType)
     TREND_TYPE smallTrend = getSmallTrend();
     bool isBigTrend = isBigTrendExist(bigTrend);
     bool isSmallTrend = isSmallTrendExist(smallTrend);
+    // PrintFormat("bigTrend: %s, %s, smallTrend: %s, %s", DebugPrintTrend(bigTrend), DebugPrintBool(isBigTrend), DebugPrintTrend(smallTrend), DebugPrintBool(isSmallTrend));
     if (isBigTrend && isSmallTrend)
     {
-        PrintFormat("bigTrend: %s, %s, smallTrend: %s, %s", DebugPrintTrend(bigTrend), DebugPrintBool(isBigTrend), DebugPrintTrend(smallTrend), DebugPrintBool(isSmallTrend));
-        smallTrend = trendType;
+        // PrintFormat("--------Hit----------bigTrend: %s, %s, smallTrend: %s, %s", DebugPrintTrend(bigTrend), DebugPrintBool(isBigTrend), DebugPrintTrend(smallTrend), DebugPrintBool(isSmallTrend));
+        trendType = smallTrend;
 
         if (smallTrend != NO_TREND && bigTrend == smallTrend)
             return true;
@@ -305,6 +314,7 @@ bool isTrendMatch(TREND_TYPE& trendType)
 }
 bool isOrderTriggered(TREND_TYPE trendType)
 {
+    // PrintFormat("isOrderTriggered(), incomeTrend: %s", DebugPrintTrend(trendType));
     if (trendType == BUY_TREND)
     {
         if (iLow(Symbol(), PERIOD_M5, 1) <= EMA_5M_8P[EMA_5M_len - 2] && iLow(Symbol(), PERIOD_M5, 1) > EMA_5M_13P[EMA_5M_len - 2])
@@ -373,18 +383,19 @@ MqlTradeRequest makeRequest(TREND_TYPE trendType, double SLRange, double stopPri
     MqlTradeRequest request;
     ZeroMemory(request);
     request.action = TRADE_ACTION_PENDING; // TRADE_ACTION_DEAL;
-    request.type   = ORDER_TYPE_BUY_STOP;
     request.price  = stopPrice;
     request.magic  = EXPERT_MAGIC_FIRST;
     request.symbol = Symbol();
     request.volume = Lots;
     if (trendType == BUY_TREND)
     {
+        request.type   = ORDER_TYPE_BUY_STOP;
         request.sl     = stopPrice - SLRange;
         request.tp     = stopPrice + SLRange;
     }
     else if (trendType == SELL_TREND)
     {
+        request.type   = ORDER_TYPE_SELL_STOP;
         request.sl     = stopPrice + SLRange;
         request.tp     = stopPrice - SLRange;
     }
