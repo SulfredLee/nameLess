@@ -2,10 +2,20 @@
 #property version     "1.00"
 #property description "This Expert Advisor do scapling by comparing trend from different time frame"
 
+#include "onTickTimer.mqh"
+
 #define EXPERT_MAGIC_FIRST 337866   // MagicNumber of the expert, for the first TP section
 #define EXPERT_MAGIC_SECOND 336866   // MagicNumber of the expert, for the second TP section
 
 input double Lots      = 0.01;
+input int SRange_SPeriod = 5;
+input int SRange_MPeriod = 13;
+input int SRange_LPeriod = 21;
+input int LRange_SPeriod = 8;
+input int LRange_LPeriod = 21;
+input int onTickTime = 5;
+
+onTickTimer gOnTickTimer;
 
 enum TREND_TYPE
 {
@@ -36,11 +46,11 @@ struct CheckRange
     int m_existRange; // a range to confirm a trend
 };
 
-int hEMA_5M_8P, hEMA_5M_13P, hEMA_5M_21P; // hEMA_5M_21P: indicator EMA, 5 minute, 21 period
-int hEMA_1H_8P, hEMA_1H_21P; // hEMA_1H_8P: indicator EMA, 1 hour, 8 period
-double EMA_5M_8P[], EMA_5M_13P[], EMA_5M_21P[];
-double EMA_1H_8P[], EMA_1H_21P[];
-int EMA_5M_len, EMA_1H_len;
+int hEMA_SRange_SPeriod, hEMA_SRange_MPeriod, hEMA_SRange_LPeriod; // hEMA_SRange_LPeriod: indicator EMA, 5 minute, 21 period
+int hEMA_LRange_SPeriod, hEMA_LRange_LPeriod; // hEMA_LRange_SPeriod: indicator EMA, 1 hour, 8 period
+double EMA_SRange_SPeriod[], EMA_SRange_MPeriod[], EMA_SRange_LPeriod[];
+double EMA_LRange_SPeriod[], EMA_LRange_LPeriod[];
+int EMA_SRange_len, EMA_LRange_len;
 int SLPipe, TPPipe;
 int SLPoint, TPPoint;
 bool isWaiting;
@@ -80,12 +90,12 @@ string DebugPrintBool(bool inBool)
 }
 void DebugPrint_1H_EMA()
 {
-    string line = "EMA_1H_21P:";
+    string line = "EMA_LRange_LPeriod:";
     for (int i = 0; i < bigCheckRange.m_trendRange; i++)
-        line += " " + DoubleToString(EMA_1H_21P[i]);
-    line += " EMA_1H_8P:";
+        line += " " + DoubleToString(EMA_LRange_LPeriod[i]);
+    line += " EMA_LRange_SPeriod:";
     for (int i = 0; i < bigCheckRange.m_trendRange; i++)
-        line += " " + DoubleToString(EMA_1H_8P[i]);
+        line += " " + DoubleToString(EMA_LRange_SPeriod[i]);
     PrintFormat(line);
 }
 void DebugPrint_1H_Bar()
@@ -100,17 +110,17 @@ void DebugPrint_1H_Bar()
 }
 void DebugPrint_5M_EMA()
 {
-    string line = "EMA_5M_21P:";
+    string line = "EMA_SRange_LPeriod:";
     for (int i = 0; i < smallCheckRange.m_trendRange; i++)
-        line += " " + DoubleToString(EMA_5M_21P[i]);
+        line += " " + DoubleToString(EMA_SRange_LPeriod[i]);
     PrintFormat(line);
-    line = "EMA_5M_13P";
+    line = "EMA_SRange_MPeriod";
     for (int i = 0; i < smallCheckRange.m_trendRange; i++)
-        line += " " + DoubleToString(EMA_5M_13P[i]);
+        line += " " + DoubleToString(EMA_SRange_MPeriod[i]);
     PrintFormat(line);
-    line = "EMA_5M_8P";
+    line = "EMA_SRange_SPeriod";
     for (int i = 0; i < smallCheckRange.m_trendRange; i++)
-        line += " " + DoubleToString(EMA_5M_8P[i]);
+        line += " " + DoubleToString(EMA_SRange_SPeriod[i]);
     PrintFormat(line);
 }
 void DebugPrint_5M_Bar()
@@ -122,16 +132,6 @@ void DebugPrint_5M_Bar()
     for (int i = smallCheckRange.m_existRange - 1; i >= 0; i--)
         line += " " + DoubleToString(iLow(Symbol(), PERIOD_M5, i));
     PrintFormat(line);
-}
-bool isMinStart()
-{
-    datetime curTimeLocal = TimeCurrent();
-    MqlDateTime cur;
-    TimeToStruct(curTimeLocal, cur);
-    if (cur.sec == 0)
-        return true;
-    else
-        return false;
 }
 void setMargin(Margin& trendMargin, int pipe)
 {
@@ -149,8 +149,8 @@ void OnInit()
 {
     PrintFormat("OnInit()");
 
-    EMA_1H_len = 5;
-    EMA_5M_len = 9;
+    EMA_LRange_len = 5;
+    EMA_SRange_len = 9;
 
     bigCheckRange.m_trendRange = 4; // range is 4 hours
     bigCheckRange.m_existRange = 3; // range is 3 hours
@@ -172,16 +172,16 @@ void OnInit()
         TPPoint = TPPipe;
     }
 
-    hEMA_5M_21P = iMA(Symbol(), PERIOD_M5, 21, 0, MODE_EMA, PRICE_CLOSE);
-    ArrayResize(EMA_5M_21P, EMA_5M_len);
-    hEMA_5M_13P = iMA(Symbol(), PERIOD_M5, 13, 0, MODE_EMA, PRICE_CLOSE);
-    ArrayResize(EMA_5M_13P, EMA_5M_len);
-    hEMA_5M_8P = iMA(Symbol(), PERIOD_M5, 8, 0, MODE_EMA, PRICE_CLOSE);
-    ArrayResize(EMA_5M_8P, EMA_5M_len);
-    hEMA_1H_21P = iMA(Symbol(), PERIOD_H1, 21, 0, MODE_EMA, PRICE_CLOSE);
-    ArrayResize(EMA_1H_21P, EMA_1H_len);
-    hEMA_1H_8P = iMA(Symbol(), PERIOD_H1, 8, 0, MODE_EMA, PRICE_CLOSE);
-    ArrayResize(EMA_1H_8P, EMA_1H_len);
+    hEMA_SRange_LPeriod = iMA(Symbol(), PERIOD_M5, SRange_LPeriod, 0, MODE_EMA, PRICE_CLOSE);
+    ArrayResize(EMA_SRange_LPeriod, EMA_SRange_len);
+    hEMA_SRange_MPeriod = iMA(Symbol(), PERIOD_M5, SRange_MPeriod, 0, MODE_EMA, PRICE_CLOSE);
+    ArrayResize(EMA_SRange_MPeriod, EMA_SRange_len);
+    hEMA_SRange_SPeriod = iMA(Symbol(), PERIOD_M5, SRange_SPeriod, 0, MODE_EMA, PRICE_CLOSE);
+    ArrayResize(EMA_SRange_SPeriod, EMA_SRange_len);
+    hEMA_LRange_LPeriod = iMA(Symbol(), PERIOD_H1, LRange_LPeriod, 0, MODE_EMA, PRICE_CLOSE);
+    ArrayResize(EMA_LRange_LPeriod, EMA_LRange_len);
+    hEMA_LRange_SPeriod = iMA(Symbol(), PERIOD_H1, LRange_SPeriod, 0, MODE_EMA, PRICE_CLOSE);
+    ArrayResize(EMA_LRange_SPeriod, EMA_LRange_len);
 
     isWaiting = true;
 
@@ -190,20 +190,23 @@ void OnInit()
 
     historyDealTotalPre = 0;
     historyDealTotalCur = 0;
+
+    // init tools
+    gOnTickTimer.InitComponent(onTickTime);
 }
 TREND_TYPE getBigTrend()
 {
     TREND_TYPE result = NO_TREND;
     for (int i = 0; i < bigCheckRange.m_trendRange; i++)
     {
-        if (EMA_1H_8P[i] < EMA_1H_21P[i] - BigTrendMargin.m_Price)
+        if (EMA_LRange_SPeriod[i] < EMA_LRange_LPeriod[i] - BigTrendMargin.m_Price)
         {
             if (result == BUY_TREND)
                 return NO_TREND;
             else
                 result = SELL_TREND;
         }
-        else if (EMA_1H_8P[i] > EMA_1H_21P[i] + BigTrendMargin.m_Price)
+        else if (EMA_LRange_SPeriod[i] > EMA_LRange_LPeriod[i] + BigTrendMargin.m_Price)
         {
             if (result == SELL_TREND)
                 return NO_TREND;
@@ -220,14 +223,14 @@ TREND_TYPE getSmallTrend()
     TREND_TYPE result = NO_TREND;
     for (int i = 0; i < smallCheckRange.m_trendRange; i++)
     {
-        if (EMA_5M_8P[i] < EMA_5M_13P[i] - SmallTrendMargin.m_Price && EMA_5M_13P[i] < EMA_5M_21P[i] - SmallTrendMargin.m_Price)
+        if (EMA_SRange_SPeriod[i] < EMA_SRange_MPeriod[i] - SmallTrendMargin.m_Price && EMA_SRange_MPeriod[i] < EMA_SRange_LPeriod[i] - SmallTrendMargin.m_Price)
         {
             if (result == BUY_TREND)
                 return NO_TREND;
             else
                 result = SELL_TREND;
         }
-        else if (EMA_5M_8P[i] > EMA_5M_13P[i] + SmallTrendMargin.m_Price && EMA_5M_13P[i] > EMA_5M_21P[i] + SmallTrendMargin.m_Price)
+        else if (EMA_SRange_SPeriod[i] > EMA_SRange_MPeriod[i] + SmallTrendMargin.m_Price && EMA_SRange_MPeriod[i] > EMA_SRange_LPeriod[i] + SmallTrendMargin.m_Price)
         {
             if (result == SELL_TREND)
                 return NO_TREND;
@@ -248,7 +251,7 @@ bool isBigTrendExist(TREND_TYPE trendType)
         int j = bigCheckRange.m_existRange - 1;
         for (int i = 0; i < bigCheckRange.m_existRange; i++)
         {
-            if (iLow(Symbol(), PERIOD_H1, j--) <= EMA_1H_21P[i])
+            if (iLow(Symbol(), PERIOD_H1, j--) <= EMA_LRange_LPeriod[i])
                 return false;
         }
         return true;
@@ -258,7 +261,7 @@ bool isBigTrendExist(TREND_TYPE trendType)
         int j = bigCheckRange.m_existRange - 1;
         for (int i = 0; i < bigCheckRange.m_existRange; i++)
         {
-            if (iHigh(Symbol(), PERIOD_H1, j--) >= EMA_1H_21P[i])
+            if (iHigh(Symbol(), PERIOD_H1, j--) >= EMA_LRange_LPeriod[i])
                 return false;
         }
         return true;
@@ -275,7 +278,7 @@ bool isSmallTrendExist(TREND_TYPE trendType)
         int j = smallCheckRange.m_existRange - 1;
         for (int i = 0; i < smallCheckRange.m_existRange; i++)
         {
-            if (iLow(Symbol(), PERIOD_M5, j--) <= EMA_5M_21P[i])
+            if (iLow(Symbol(), PERIOD_M5, j--) <= EMA_SRange_LPeriod[i])
                 return false;
         }
         return true;
@@ -285,7 +288,7 @@ bool isSmallTrendExist(TREND_TYPE trendType)
         int j = smallCheckRange.m_existRange - 1;
         for (int i = 0; i < smallCheckRange.m_existRange; i++)
         {
-            if (iHigh(Symbol(), PERIOD_M5, j--) >= EMA_5M_21P[i])
+            if (iHigh(Symbol(), PERIOD_M5, j--) >= EMA_SRange_LPeriod[i])
                 return false;
         }
         return true;
@@ -317,14 +320,14 @@ bool isOrderTriggered(TREND_TYPE trendType)
     // PrintFormat("isOrderTriggered(), incomeTrend: %s", DebugPrintTrend(trendType));
     if (trendType == BUY_TREND)
     {
-        if (iLow(Symbol(), PERIOD_M5, 1) <= EMA_5M_8P[EMA_5M_len - 2] && iLow(Symbol(), PERIOD_M5, 1) > EMA_5M_13P[EMA_5M_len - 2])
+        if (iLow(Symbol(), PERIOD_M5, 1) <= EMA_SRange_SPeriod[EMA_SRange_len - 2] && iLow(Symbol(), PERIOD_M5, 1) > EMA_SRange_MPeriod[EMA_SRange_len - 2])
             return true;
         else
             return false;
     }
     else if (trendType == SELL_TREND)
     {
-        if (iHigh(Symbol(), PERIOD_M5, 1) >= EMA_5M_8P[EMA_5M_len - 2] && iHigh(Symbol(), PERIOD_M5, 1) < EMA_5M_13P[EMA_5M_len - 2])
+        if (iHigh(Symbol(), PERIOD_M5, 1) >= EMA_SRange_SPeriod[EMA_SRange_len - 2] && iHigh(Symbol(), PERIOD_M5, 1) < EMA_SRange_MPeriod[EMA_SRange_len - 2])
             return true;
         else
             return false;
@@ -424,15 +427,15 @@ void tailingPosition()
 //+------------------------------------------------------------------+
 void OnTick()
 {
-    bool isStart = isMinStart();
+    bool isStart = gOnTickTimer.IsStart();
     if (isWaiting && isStart)
     {
         isWaiting = false;
-        CopyBuffer(hEMA_5M_21P, 0, 0, EMA_5M_len, EMA_5M_21P);
-        CopyBuffer(hEMA_5M_13P, 0, 0, EMA_5M_len, EMA_5M_13P);
-        CopyBuffer(hEMA_5M_8P, 0, 0, EMA_5M_len, EMA_5M_8P);
-        CopyBuffer(hEMA_1H_21P, 0, 0, EMA_1H_len, EMA_1H_21P);
-        CopyBuffer(hEMA_1H_8P, 0, 0, EMA_1H_len, EMA_1H_8P);
+        CopyBuffer(hEMA_SRange_LPeriod, 0, 0, EMA_SRange_len, EMA_SRange_LPeriod);
+        CopyBuffer(hEMA_SRange_MPeriod, 0, 0, EMA_SRange_len, EMA_SRange_MPeriod);
+        CopyBuffer(hEMA_SRange_SPeriod, 0, 0, EMA_SRange_len, EMA_SRange_SPeriod);
+        CopyBuffer(hEMA_LRange_LPeriod, 0, 0, EMA_LRange_len, EMA_LRange_LPeriod);
+        CopyBuffer(hEMA_LRange_SPeriod, 0, 0, EMA_LRange_len, EMA_LRange_SPeriod);
 
         TREND_TYPE trendType;
         if (isTrendMatch(trendType) && isOrderTriggered(trendType))
@@ -462,15 +465,15 @@ void OnTick()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
-    IndicatorRelease(hEMA_5M_21P);
-    ArrayFree(EMA_5M_21P);
-    IndicatorRelease(hEMA_5M_13P);
-    ArrayFree(EMA_5M_13P);
-    IndicatorRelease(hEMA_5M_8P);
-    ArrayFree(EMA_5M_8P);
-    IndicatorRelease(hEMA_1H_21P);
-    ArrayFree(EMA_1H_21P);
-    IndicatorRelease(hEMA_1H_8P);
-    ArrayFree(EMA_1H_8P);
+    IndicatorRelease(hEMA_SRange_LPeriod);
+    ArrayFree(EMA_SRange_LPeriod);
+    IndicatorRelease(hEMA_SRange_MPeriod);
+    ArrayFree(EMA_SRange_MPeriod);
+    IndicatorRelease(hEMA_SRange_SPeriod);
+    ArrayFree(EMA_SRange_SPeriod);
+    IndicatorRelease(hEMA_LRange_LPeriod);
+    ArrayFree(EMA_LRange_LPeriod);
+    IndicatorRelease(hEMA_LRange_SPeriod);
+    ArrayFree(EMA_LRange_SPeriod);
 }
 //+------------------------------------------------------------------+

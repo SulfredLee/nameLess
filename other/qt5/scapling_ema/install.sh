@@ -1,5 +1,5 @@
 #!/bin/bash
-sourceFiles=($(ls *mq5))
+sourceFiles=($(ls *mq5 *mqh))
 dstPath="/mnt/c/Users/sflee/AppData/Roaming/MetaQuotes/Terminal/D0E8209F77C8CF37AD8BF550E51FF075/MQL5"
 dstFolder="Experts/scapling_ema"
 sourcePath="$PWD"
