@@ -12,6 +12,8 @@ public:
 
     void InitComponent(int timeRange);
     bool IsStart();
+private:
+    bool IsDateTimeEqual(const MqlDateTime& first, const MqlDateTime& second);
 };
 
 void onTickTimer::InitComponent(int timeRange)
@@ -22,16 +24,29 @@ void onTickTimer::InitComponent(int timeRange)
     TimeToStruct(curTimeLocal, m_preTime);
 }
 
-bool IsStart()
+bool onTickTimer::IsStart()
 {
     datetime curTimeLocal = TimeCurrent();
     TimeToStruct(curTimeLocal, m_curTime);
 
-    if (m_preTime == m_curTime) // prevent always true for the same second
+    if (IsDateTimeEqual(m_preTime, m_curTime)) // prevent always true for the same second
         return false;
     m_preTime = m_curTime;
 
-    if (cur.min % m_timeRange == 0 && cur.sec == 0)
+    if (m_curTime.min % m_timeRange == 0 && m_curTime.sec == 0)
+        return true;
+    else
+        return false;
+}
+
+bool onTickTimer::IsDateTimeEqual(const MqlDateTime& first, const MqlDateTime& second)
+{
+    if (first.year == second.year
+        && first.mon == second.mon
+        && first.day == second.day
+        && first.hour == second.hour
+        && first.min == second.min
+        && first.sec == second.sec)
         return true;
     else
         return false;
