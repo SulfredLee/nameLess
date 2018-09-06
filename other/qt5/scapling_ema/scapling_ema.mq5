@@ -13,6 +13,10 @@ input int SRange_MPeriod = 13;
 input int SRange_LPeriod = 21;
 input int LRange_SPeriod = 8;
 input int LRange_LPeriod = 21;
+input int SRange_TrendPeriod = 4;
+input int SRange_TrendConfirmPeriod = 3;
+input int LRange_TrendPeriod = 4;
+input int LRange_TrendConfirmPeriod = 3;
 input int onTickTime = 5;
 
 onTickTimer gOnTickTimer;
@@ -46,13 +50,6 @@ struct CheckRange
     int m_existRange; // a range to confirm a trend
 };
 
-int hEMA_SRange_SPeriod, hEMA_SRange_MPeriod, hEMA_SRange_LPeriod; // hEMA_SRange_LPeriod: indicator EMA, 5 minute, 21 period
-int hEMA_LRange_SPeriod, hEMA_LRange_LPeriod; // hEMA_LRange_SPeriod: indicator EMA, 1 hour, 8 period
-double EMA_SRange_SPeriod[], EMA_SRange_MPeriod[], EMA_SRange_LPeriod[];
-double EMA_LRange_SPeriod[], EMA_LRange_LPeriod[];
-int EMA_SRange_len, EMA_LRange_len;
-int SLPipe, TPPipe;
-int SLPoint, TPPoint;
 bool isWaiting;
 Margin BigTrendMargin, SmallTrendMargin;
 int orderSearchPeriod;
