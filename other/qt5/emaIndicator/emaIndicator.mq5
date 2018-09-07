@@ -67,8 +67,8 @@ void InitIndicator()
     g_hEMA_SRange_SPeriod = iMA(Symbol(), PERIOD_M5, g_SRange_SPeriod, 0, MODE_EMA, PRICE_CLOSE);
     g_hEMA_SRange_MPeriod = iMA(Symbol(), PERIOD_M5, g_SRange_MPeriod, 0, MODE_EMA, PRICE_CLOSE);
     g_hEMA_SRange_LPeriod = iMA(Symbol(), PERIOD_M5, g_SRange_LPeriod, 0, MODE_EMA, PRICE_CLOSE);
-    g_hEMA_LRange_SPeriod = iMA(Symbol(), PERIOD_M5, g_LRange_SPeriod, 0, MODE_EMA, PRICE_CLOSE);
-    g_hEMA_LRange_LPeriod = iMA(Symbol(), PERIOD_M5, g_LRange_LPeriod, 0, MODE_EMA, PRICE_CLOSE);
+    g_hEMA_LRange_SPeriod = iMA(Symbol(), PERIOD_H1, g_LRange_SPeriod, 0, MODE_EMA, PRICE_CLOSE);
+    g_hEMA_LRange_LPeriod = iMA(Symbol(), PERIOD_H1, g_LRange_LPeriod, 0, MODE_EMA, PRICE_CLOSE);
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
