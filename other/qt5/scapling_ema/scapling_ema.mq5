@@ -36,19 +36,73 @@ SLEarlyExit g_SLEarlyExit;
 bool g_isWaiting;
 int g_historyDealTotalPre, g_historyDealTotalCur;
 
-void DebugPrintRequest(const MqlTradeRequest& inRequest)
+//+------------------------------------------------------------------+
+//| Returns transaction textual description                          |
+//+------------------------------------------------------------------+
+string DebugPrintTradeTransaction(const MqlTradeTransaction &trans)
 {
-    PrintFormat("action: %d, type: %d, price: %f, sl: %f, tp: %f, magic: %d, symbol: %s, volume: %f",
-                inRequest.action,
-                inRequest.type,
-                inRequest.price,
-                inRequest.sl,
-                inRequest.tp,
-                inRequest.magic,
-                inRequest.symbol,
-                inRequest.volume);
+    //---
+    string desc=EnumToString(trans.type)+" ";
+    desc+="Symbol: "+trans.symbol+" ";
+    desc+="Deal ticket: "+(string)trans.deal+" ";
+    desc+="Deal type: "+EnumToString(trans.deal_type)+" ";
+    desc+="Order ticket: "+(string)trans.order+" ";
+    desc+="Order type: "+EnumToString(trans.order_type)+" ";
+    desc+="Order state: "+EnumToString(trans.order_state)+" ";
+    desc+="Order time type: "+EnumToString(trans.time_type)+" ";
+    desc+="Order expiration: "+TimeToString(trans.time_expiration)+" ";
+    desc+="Price: "+StringFormat("%G",trans.price)+" ";
+    desc+="Price trigger: "+StringFormat("%G",trans.price_trigger)+" ";
+    desc+="Stop Loss: "+StringFormat("%G",trans.price_sl)+" ";
+    desc+="Take Profit: "+StringFormat("%G",trans.price_tp)+" ";
+    desc+="Volume: "+StringFormat("%G",trans.volume)+" ";
+    desc+="Position: "+(string)trans.position+" ";
+    desc+="Position by: "+(string)trans.position_by+" ";
+    //--- return the obtained string
+    return desc;
 }
-
+//+------------------------------------------------------------------+
+//| Returns the trade request textual description                    |
+//+------------------------------------------------------------------+
+string DebugPrintTradeRequest(const MqlTradeRequest &request)
+{
+    //---
+    string desc=EnumToString(request.action)+" ";
+    desc+="Symbol: "+request.symbol+" ";
+    desc+="Magic Number: "+StringFormat("%d",request.magic)+" ";
+    desc+="Order ticket: "+(string)request.order+" ";
+    desc+="Order type: "+EnumToString(request.type)+" ";
+    desc+="Order filling: "+EnumToString(request.type_filling)+" ";
+    desc+="Order time type: "+EnumToString(request.type_time)+" ";
+    desc+="Order expiration: "+TimeToString(request.expiration)+" ";
+    desc+="Price: "+StringFormat("%G",request.price)+" ";
+    desc+="Deviation points: "+StringFormat("%G",request.deviation)+" ";
+    desc+="Stop Loss: "+StringFormat("%G",request.sl)+" ";
+    desc+="Take Profit: "+StringFormat("%G",request.tp)+" ";
+    desc+="Stop Limit: "+StringFormat("%G",request.stoplimit)+" ";
+    desc+="Volume: "+StringFormat("%G",request.volume)+" ";
+    desc+="Comment: "+request.comment+" ";
+    //--- return the obtained string
+    return desc;
+}
+//+------------------------------------------------------------------+
+//| Returns the textual description of the request handling result   |
+//+------------------------------------------------------------------+
+string DebugPrintTradeResult(const MqlTradeResult &result)
+{
+    //---
+    string desc="Retcode "+(string)result.retcode+" ";
+    desc+="Request ID: "+StringFormat("%d",result.request_id)+" ";
+    desc+="Order ticket: "+(string)result.order+" ";
+    desc+="Deal ticket: "+(string)result.deal+" ";
+    desc+="Volume: "+StringFormat("%G",result.volume)+" ";
+    desc+="Price: "+StringFormat("%G",result.price)+" ";
+    desc+="Ask: "+StringFormat("%G",result.ask)+" ";
+    desc+="Bid: "+StringFormat("%G",result.bid)+" ";
+    desc+="Comment: "+result.comment+" ";
+    //--- return the obtained string
+    return desc;
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -82,7 +136,7 @@ void OnTick()
         MqlTradeRequest request;
         if (g_Trader.OnTick(request))
         {
-            DebugPrintRequest(request);
+            PrintFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeRequest(request));
             MqlTradeResult result;
             ZeroMemory(result);
 
@@ -95,6 +149,20 @@ void OnTick()
     }
     if (!isStart)
         g_isWaiting = true;
+}
+//+------------------------------------------------------------------+
+//| TradeTransaction function                                        |
+//+------------------------------------------------------------------+
+void OnTradeTransaction(const MqlTradeTransaction& trans,
+                        const MqlTradeRequest& request,
+                        const MqlTradeResult& result)
+{
+    double bid = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+    double ask = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+    PrintFormat("%s:%d bid: %f, ask: %f", __FUNCTION__, __LINE__, bid, ask);
+    PrintFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeTransaction(trans));
+    PrintFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeRequest(request));
+    PrintFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeResult(result));
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
