@@ -64,6 +64,7 @@ public:
     void RemoveRemainingOrder();
     void SetIndicatorsLen(int BL_Indicators_len, int SL_Indicators_len);
     void TestEmailAlert();
+    bool IsWatingLastPrice();
 
 private:
     int GetNumberOfSRLines(string inputFile);
@@ -491,4 +492,12 @@ void SRLineManager::TestEmailAlert()
     {
         PrintFormat("SendMail error %d", GetLastError());
     }
+}
+
+bool SRLineManager::IsWatingLastPrice()
+{
+    if (m_lastPrice == -1)
+        return true;
+    else
+        return false;
 }
