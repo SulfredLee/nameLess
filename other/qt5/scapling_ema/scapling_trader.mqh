@@ -1,6 +1,5 @@
 #property copyright "Copyright 2018, Damage Company"
 
-#define EXPERT_MAGIC 337866   // MagicNumber of the expert, for the first TP section
 
 enum TREND_TYPE
 {
@@ -15,12 +14,13 @@ enum STOP_ORDER_TYPE
 };
 struct TrendDescription
 {
-    int m_TrendRange;
+    int m_MinPeriod;
     int m_ConfirmRange;
+    int m_MaxPeriod;
 };
 struct TrendMargin
 {
-    int m_Point;
+    double m_Point;
     double m_Price;
 };
 struct StopOrder
@@ -47,8 +47,8 @@ private:
     int m_EMA_LRange_len;
     int m_SLPipe;
     int m_TPPipe;
-    int m_SLPoint;
-    int m_TPPoint;
+    double m_SLPoint;
+    double m_TPPoint;
     int m_SRange_SPeriod;
     int m_SRange_MPeriod;
     int m_SRange_LPeriod;
@@ -60,6 +60,7 @@ private:
     TrendMargin m_SRange_TrendMargin;
     TrendMargin m_LRange_TrendMargin;
     double m_Lots;
+    ulong m_magic;
 public:
     ScaplingTrader(){}
     ~ScaplingTrader()
@@ -76,7 +77,7 @@ public:
         ArrayFree(m_EMA_LRange_SPeriod);
     }
 
-    void InitComponent(int SRange_SPeriod, int SRange_MPeriod, int SRange_LPeriod, int LRange_SPeriod, int LRange_LPeriod, int SRange_TrendPeriod, int SRange_TrendConfirmPeriod, int LRange_TrendPeriod, int LRange_TrendConfirmPeriod, int ScanRange, int SLPipe, int TPPipe, int SRange_Margin, int LRange_Margin, double Lots);
+    void InitComponent(int SRange_SPeriod, int SRange_MPeriod, int SRange_LPeriod, int LRange_SPeriod, int LRange_LPeriod, int SRange_TrendMinPeriod, int SRange_TrendConfirmPeriod, int SRange_TrendMaxPeriod, int LRange_TrendMinPeriod, int LRange_TrendConfirmPeriod, int LRange_TrendMaxPeriod, int ScanRange, int SLPipe, int TPPipe, int SRange_Margin, int LRange_Margin, double Lots, ulong magic);
     bool OnTick(MqlTradeRequest& request);
 private:
     int GetMax(int first, int second);
@@ -87,18 +88,23 @@ private:
     bool isBigTrendExist(TREND_TYPE trendType);
     bool isSmallTrendExist(TREND_TYPE trendType);
     bool isOrderTriggered(TREND_TYPE trendType);
-    void prepareOrder(TREND_TYPE trendType, double& SLRange, double& stopPrice);
+    void prepareOrder(TREND_TYPE trendType, double& SL, double& TP, double& stopPrice);
     double getSL(TREND_TYPE trendType, double referencePrice);
-    MqlTradeRequest makeRequest(TREND_TYPE trendType, double SLRange, double stopPrice);
+    double getTP(TREND_TYPE trendType, double referencePrice);
+    MqlTradeRequest makeRequest(TREND_TYPE trendType, double SL, double TP, double stopPrice);
     string DebugPrintTrend(const TREND_TYPE& inTrend);
     string DebugPrintBool(bool inBool);
     void DebugPrint_LRange_EMA();
     void DebugPrint_LRange_Bar();
     void DebugPrint_SRange_EMA();
     void DebugPrint_SRange_Bar();
+    TREND_TYPE getBigTrendFromBar(int barIdx);
+    bool isBigTrendTooLong(TREND_TYPE trendType);
+    bool isSmallTrendTooLong(TREND_TYPE trendType);
+    TREND_TYPE getSmallTrendFromBar(int barIdx);
 };
 
-void ScaplingTrader::InitComponent(int SRange_SPeriod, int SRange_MPeriod, int SRange_LPeriod, int LRange_SPeriod, int LRange_LPeriod, int SRange_TrendPeriod, int SRange_TrendConfirmPeriod, int LRange_TrendPeriod, int LRange_TrendConfirmPeriod, int ScanRange, int SLPipe, int TPPipe, int SRange_Margin, int LRange_Margin, double Lots)
+void ScaplingTrader::InitComponent(int SRange_SPeriod, int SRange_MPeriod, int SRange_LPeriod, int LRange_SPeriod, int LRange_LPeriod, int SRange_TrendMinPeriod, int SRange_TrendConfirmPeriod, int SRange_TrendMaxPeriod, int LRange_TrendMinPeriod, int LRange_TrendConfirmPeriod, int LRange_TrendMaxPeriod, int ScanRange, int SLPipe, int TPPipe, int SRange_Margin, int LRange_Margin, double Lots, ulong magic)
 {
     m_SRange_SPeriod = SRange_SPeriod;
     m_SRange_MPeriod = SRange_MPeriod;
@@ -106,20 +112,26 @@ void ScaplingTrader::InitComponent(int SRange_SPeriod, int SRange_MPeriod, int S
     m_LRange_SPeriod = LRange_SPeriod;
     m_LRange_LPeriod = LRange_LPeriod;
 
-    m_SRange_Description.m_TrendRange = SRange_TrendPeriod;
+    m_SRange_Description.m_MinPeriod = SRange_TrendMinPeriod;
     m_SRange_Description.m_ConfirmRange = SRange_TrendConfirmPeriod;
-    m_LRange_Description.m_TrendRange = LRange_TrendPeriod;
+    m_SRange_Description.m_MaxPeriod = SRange_TrendMaxPeriod;
+    m_LRange_Description.m_MinPeriod = LRange_TrendMinPeriod;
     m_LRange_Description.m_ConfirmRange = LRange_TrendConfirmPeriod;
+    m_LRange_Description.m_MaxPeriod = LRange_TrendMaxPeriod;
 
     m_ScanRange = ScanRange;
 
-    m_EMA_SRange_len = GetMax(m_ScanRange + 1, GetMax(m_SRange_Description.m_TrendRange, m_SRange_Description.m_ConfirmRange));
-    m_EMA_LRange_len = GetMax(m_LRange_Description.m_TrendRange, m_LRange_Description.m_ConfirmRange);
+    m_EMA_SRange_len = GetMax(GetMax(m_SRange_Description.m_MinPeriod, m_SRange_Description.m_ConfirmRange), m_SRange_Description.m_MaxPeriod);
+    m_EMA_LRange_len = GetMax(GetMax(m_LRange_Description.m_MinPeriod, m_LRange_Description.m_ConfirmRange), m_LRange_Description.m_MaxPeriod);
+    m_EMA_SRange_len++;
+    m_EMA_LRange_len++;
+
+    PrintFormat("m_EMA_SRange_len: %d, m_EMA_LRange_len: %d", m_SRange_Description.m_MaxPeriod, m_LRange_Description.m_MaxPeriod);
 
     m_SLPipe = SLPipe;
     m_TPPipe = TPPipe;
 
-    if (Digits() == 5)
+    if (Digits() == 3)
     {
         m_SLPoint = m_SLPipe * 10;
         m_TPPoint = m_TPPipe * 10;
@@ -143,8 +155,11 @@ void ScaplingTrader::InitComponent(int SRange_SPeriod, int SRange_MPeriod, int S
 
     SetTrendMargin(m_SRange_TrendMargin, SRange_Margin);
     SetTrendMargin(m_LRange_TrendMargin, LRange_Margin);
+    PrintFormat("SRange_TrendMargin.m_Point: %f, SRange_TrendMargin.m_Price: %f, SRange_Margin: %d", m_SRange_TrendMargin.m_Point, m_SRange_TrendMargin.m_Price, SRange_Margin);
+    PrintFormat("LRange_TrendMargin.m_Point: %f, LRange_TrendMargin.m_Price: %f, LRange_Margin: %d", m_LRange_TrendMargin.m_Point, m_LRange_TrendMargin.m_Price, LRange_Margin);
 
     m_Lots = Lots;
+    m_magic = magic;
 }
 
 int ScaplingTrader::GetMax(int first, int second)
@@ -166,10 +181,13 @@ bool ScaplingTrader::OnTick(MqlTradeRequest& request)
     TREND_TYPE trendType;
     if (isTrendMatch(trendType) && isOrderTriggered(trendType))
     {
-        double SLRange, stopPrice; // stopPrice: buy/sell stop price
-        prepareOrder(trendType, SLRange, stopPrice);
-        request = makeRequest(trendType, SLRange, stopPrice);
+        double SL, TP, stopPrice; // stopPrice: buy/sell stop price
+        prepareOrder(trendType, SL, TP, stopPrice);
+        request = makeRequest(trendType, SL, TP, stopPrice);
 
+        double bitPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+        double askPrice = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+        PrintFormat("bitPrice: %f, askPrice: %f, Point: %f, Digits: %d", bitPrice, askPrice, Point(), Digits());
         return true;
     }
     return false;
@@ -177,12 +195,56 @@ bool ScaplingTrader::OnTick(MqlTradeRequest& request)
 
 void ScaplingTrader::SetTrendMargin(TrendMargin& trendMargin, int margin)
 {
-    if (Digits() ==  5)
+    if (Digits() ==  3)
         trendMargin.m_Point = margin * 10;
     else
         trendMargin.m_Point = margin;
 
     trendMargin.m_Price = NormalizeDouble(trendMargin.m_Point * Point(), Digits());
+}
+
+TREND_TYPE ScaplingTrader::getBigTrendFromBar(int barIdx)
+{
+    if (m_EMA_LRange_SPeriod[barIdx] < m_EMA_LRange_LPeriod[barIdx] - m_LRange_TrendMargin.m_Price)
+        return SELL_TREND;
+    else if (m_EMA_LRange_SPeriod[barIdx] > m_EMA_LRange_LPeriod[barIdx] + m_LRange_TrendMargin.m_Price)
+        return BUY_TREND;
+    else
+        return NO_TREND;
+}
+
+bool ScaplingTrader::isBigTrendTooLong(TREND_TYPE trendType)
+{
+    for (int i = m_EMA_LRange_len - 2; i >= m_EMA_LRange_len - m_LRange_Description.m_MaxPeriod - 1; i--)
+    {
+        // PrintFormat("isBigTrendTooLong, i: %d", i);
+        if (trendType != getBigTrendFromBar(i))
+            return false;
+    }
+    return true;
+}
+
+bool ScaplingTrader::isSmallTrendTooLong(TREND_TYPE trendType)
+{
+    for (int i = m_EMA_SRange_len - 2; i >= m_EMA_SRange_len - m_SRange_Description.m_MaxPeriod - 1; i--)
+    {
+        // PrintFormat("isSmallTrendTooLong, i: %d", i);
+        if (trendType != getSmallTrendFromBar(i))
+            return false;
+    }
+    return true;
+}
+
+TREND_TYPE ScaplingTrader::getSmallTrendFromBar(int barIdx)
+{
+    if (m_EMA_SRange_SPeriod[barIdx] < m_EMA_SRange_MPeriod[barIdx] - m_SRange_TrendMargin.m_Price
+        && m_EMA_SRange_MPeriod[barIdx] < m_EMA_SRange_LPeriod[barIdx] - m_SRange_TrendMargin.m_Price)
+        return SELL_TREND;
+    else if (m_EMA_SRange_SPeriod[barIdx] > m_EMA_SRange_MPeriod[barIdx] + m_SRange_TrendMargin.m_Price
+             && m_EMA_SRange_MPeriod[barIdx] > m_EMA_SRange_LPeriod[barIdx] + m_SRange_TrendMargin.m_Price)
+        return BUY_TREND;
+    else
+        return NO_TREND;
 }
 
 bool ScaplingTrader::isTrendMatch(TREND_TYPE& trendType)
@@ -191,9 +253,13 @@ bool ScaplingTrader::isTrendMatch(TREND_TYPE& trendType)
     TREND_TYPE smallTrend = getSmallTrend();
     bool isBigTrend = isBigTrendExist(bigTrend);
     bool isSmallTrend = isSmallTrendExist(smallTrend);
+    bool isBTrendTooLong = isBigTrendTooLong(bigTrend);
+    bool isSTrendTooLong = isSmallTrendTooLong(smallTrend);
     // PrintFormat("bigTrend: %s, %s, smallTrend: %s, %s", DebugPrintTrend(bigTrend), DebugPrintBool(isBigTrend), DebugPrintTrend(smallTrend), DebugPrintBool(isSmallTrend));
-    if (isBigTrend && isSmallTrend)
+    if (isBigTrend && isSmallTrend && !isBTrendTooLong && !isSTrendTooLong)
     {
+        // DebugPrint_LRange_EMA();
+        // DebugPrint_SRange_EMA();
         // PrintFormat("--------Hit----------bigTrend: %s, %s, smallTrend: %s, %s", DebugPrintTrend(bigTrend), DebugPrintBool(isBigTrend), DebugPrintTrend(smallTrend), DebugPrintBool(isSmallTrend));
         trendType = smallTrend;
 
@@ -208,7 +274,7 @@ bool ScaplingTrader::isTrendMatch(TREND_TYPE& trendType)
 TREND_TYPE ScaplingTrader::getBigTrend()
 {
     TREND_TYPE result = NO_TREND;
-    for (int i = 0; i < m_LRange_Description.m_TrendRange; i++)
+    for (int i = m_EMA_LRange_len - 2; i >= m_EMA_LRange_len - m_LRange_Description.m_MinPeriod - 1; i--)
     {
         if (m_EMA_LRange_SPeriod[i] < m_EMA_LRange_LPeriod[i] - m_LRange_TrendMargin.m_Price)
         {
@@ -233,7 +299,7 @@ TREND_TYPE ScaplingTrader::getBigTrend()
 TREND_TYPE ScaplingTrader::getSmallTrend()
 {
     TREND_TYPE result = NO_TREND;
-    for (int i = 0; i < m_SRange_Description.m_TrendRange; i++)
+    for (int i = m_EMA_SRange_len - 2; i >= m_EMA_SRange_len - m_SRange_Description.m_MinPeriod - 1; i--)
     {
         if (m_EMA_SRange_SPeriod[i] < m_EMA_SRange_MPeriod[i] - m_SRange_TrendMargin.m_Price && m_EMA_SRange_MPeriod[i] < m_EMA_SRange_LPeriod[i] - m_SRange_TrendMargin.m_Price)
         {
@@ -259,21 +325,21 @@ bool ScaplingTrader::isBigTrendExist(TREND_TYPE trendType)
 {
     // DebugPrint_1H_EMA();
     // DebugPrint_1H_Bar();
-    int j = m_LRange_Description.m_ConfirmRange - 1;
+    int j = 2;
     if (trendType == BUY_TREND)
     {
-        for (int i = 0; i < m_LRange_Description.m_ConfirmRange; i++)
+        for (int i = m_EMA_LRange_len - 2; i >= m_EMA_LRange_len - m_LRange_Description.m_ConfirmRange - 1; i--)
         {
-            if (iLow(Symbol(), PERIOD_H1, j--) <= m_EMA_LRange_LPeriod[i])
+            if (iLow(Symbol(), PERIOD_H1, j++) <= m_EMA_LRange_LPeriod[i])
                 return false;
         }
         return true;
     }
     else if (trendType == SELL_TREND)
     {
-        for (int i = 0; i < m_LRange_Description.m_ConfirmRange; i++)
+        for (int i = m_EMA_LRange_len - 2; i >= m_EMA_LRange_len - m_LRange_Description.m_ConfirmRange - 1; i--)
         {
-            if (iHigh(Symbol(), PERIOD_H1, j--) >= m_EMA_LRange_LPeriod[i])
+            if (iHigh(Symbol(), PERIOD_H1, j++) >= m_EMA_LRange_LPeriod[i])
                 return false;
         }
         return true;
@@ -286,10 +352,10 @@ bool ScaplingTrader::isSmallTrendExist(TREND_TYPE trendType)
 {
     // DebugPrint_5M_EMA();
     // DebugPrint_5M_Bar();
-    int j = m_SRange_Description.m_ConfirmRange - 1;
+    int j = 2;
     if (trendType == BUY_TREND)
     {
-        for (int i = 0; i < m_SRange_Description.m_ConfirmRange; i++)
+        for (int i = m_EMA_SRange_len - 2; i >= m_EMA_SRange_len - m_SRange_Description.m_ConfirmRange - 1; i--)
         {
             if (iLow(Symbol(), PERIOD_M5, j--) <= m_EMA_SRange_LPeriod[i])
                 return false;
@@ -298,7 +364,7 @@ bool ScaplingTrader::isSmallTrendExist(TREND_TYPE trendType)
     }
     else if (trendType == SELL_TREND)
     {
-        for (int i = 0; i < m_SRange_Description.m_ConfirmRange; i++)
+        for (int i = m_EMA_SRange_len - 2; i >= m_EMA_SRange_len - m_SRange_Description.m_ConfirmRange - 1; i--)
         {
             if (iHigh(Symbol(), PERIOD_M5, j--) >= m_EMA_SRange_LPeriod[i])
                 return false;
@@ -330,7 +396,7 @@ bool ScaplingTrader::isOrderTriggered(TREND_TYPE trendType)
         return false;
 }
 
-void ScaplingTrader::prepareOrder(TREND_TYPE trendType, double& SLRange, double& stopPrice)
+void ScaplingTrader::prepareOrder(TREND_TYPE trendType, double& SL, double& TP, double& stopPrice)
 {
     if (trendType == BUY_TREND)
     {
@@ -340,8 +406,8 @@ void ScaplingTrader::prepareOrder(TREND_TYPE trendType, double& SLRange, double&
             if (iHigh(Symbol(), PERIOD_M5, i) > high)
                 high = iHigh(Symbol(), PERIOD_M5, i);
         }
-        stopPrice = high;
-        SLRange = stopPrice - getSL(trendType, iLow(Symbol(), PERIOD_M5, 1));
+        double askPrice = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+        stopPrice = high < askPrice ? askPrice : high;
     }
     else if (trendType == SELL_TREND)
     {
@@ -351,53 +417,59 @@ void ScaplingTrader::prepareOrder(TREND_TYPE trendType, double& SLRange, double&
             if (iLow(Symbol(), PERIOD_M5, i) < low)
                 low = iLow(Symbol(), PERIOD_M5, i);
         }
-        stopPrice = low;
-        SLRange = getSL(trendType, iHigh(Symbol(), PERIOD_M5, 1)) - stopPrice;
+        double bitPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+        stopPrice = low > bitPrice ? bitPrice : low;
     }
+    SL = getSL(trendType, stopPrice);
+    TP = getTP(trendType, stopPrice);
 }
 
-double ScaplingTrader::getSL(TREND_TYPE trendType, double referencePrice)
+double ScaplingTrader::getTP(TREND_TYPE trendType, double referencePrice)
 {
-    int shiftPipe = 3;
-    double shiftPrice;
-
-    if (Digits() == 5)
-        shiftPrice = shiftPipe * 10;
-    else
-        shiftPrice = shiftPipe;
-
     if (trendType == BUY_TREND)
     {
-        return NormalizeDouble(referencePrice - shiftPrice, Digits());
+        return NormalizeDouble(referencePrice + m_TPPoint * Point(), Digits());
     }
     else if (trendType == SELL_TREND)
     {
-        return NormalizeDouble(referencePrice + shiftPrice, Digits());
+        return NormalizeDouble(referencePrice - m_TPPoint * Point(), Digits());
     }
     else
         return 0;
 }
 
-MqlTradeRequest ScaplingTrader::makeRequest(TREND_TYPE trendType, double SLRange, double stopPrice)
+double ScaplingTrader::getSL(TREND_TYPE trendType, double referencePrice)
+{
+    if (trendType == BUY_TREND)
+    {
+        return NormalizeDouble(referencePrice - m_SLPoint * Point(), Digits());
+    }
+    else if (trendType == SELL_TREND)
+    {
+        return NormalizeDouble(referencePrice + m_SLPoint * Point(), Digits());
+    }
+    else
+        return 0;
+}
+
+MqlTradeRequest ScaplingTrader::makeRequest(TREND_TYPE trendType, double SL, double TP, double stopPrice)
 {
     MqlTradeRequest request;
     ZeroMemory(request);
     request.action = TRADE_ACTION_PENDING; // TRADE_ACTION_DEAL;
     request.price  = stopPrice;
-    request.magic  = EXPERT_MAGIC;
+    request.magic  = m_magic;
     request.symbol = Symbol();
     request.volume = m_Lots;
+    request.sl = SL;
+    request.tp = TP;
     if (trendType == BUY_TREND)
     {
         request.type   = ORDER_TYPE_BUY_STOP;
-        request.sl     = stopPrice - SLRange;
-        request.tp     = stopPrice + SLRange;
     }
     else if (trendType == SELL_TREND)
     {
         request.type   = ORDER_TYPE_SELL_STOP;
-        request.sl     = stopPrice + SLRange;
-        request.tp     = stopPrice - SLRange;
     }
     else
         ZeroMemory(request);
@@ -424,10 +496,11 @@ string ScaplingTrader::DebugPrintBool(bool inBool)
 void ScaplingTrader::DebugPrint_LRange_EMA()
 {
     string line = "EMA_LRange_LPeriod:";
-    for (int i = 0; i < m_LRange_Description.m_TrendRange; i++)
+    for (int i = 0; i < m_EMA_LRange_len; i++)
         line += " " + DoubleToString(m_EMA_LRange_LPeriod[i]);
-    line += " EMA_LRange_SPeriod:";
-    for (int i = 0; i < m_LRange_Description.m_TrendRange; i++)
+    PrintFormat(line);
+    line = "EMA_LRange_SPeriod:";
+    for (int i = 0; i < m_EMA_LRange_len; i++)
         line += " " + DoubleToString(m_EMA_LRange_SPeriod[i]);
     PrintFormat(line);
 }
@@ -446,15 +519,15 @@ void ScaplingTrader::DebugPrint_LRange_Bar()
 void ScaplingTrader::DebugPrint_SRange_EMA()
 {
     string line = "EMA_SRange_LPeriod:";
-    for (int i = 0; i < m_SRange_Description.m_TrendRange; i++)
+    for (int i = 0; i < m_EMA_SRange_len; i++)
         line += " " + DoubleToString(m_EMA_SRange_LPeriod[i]);
     PrintFormat(line);
     line = "EMA_SRange_MPeriod";
-    for (int i = 0; i < m_SRange_Description.m_TrendRange; i++)
+    for (int i = 0; i < m_EMA_SRange_len; i++)
         line += " " + DoubleToString(m_EMA_SRange_MPeriod[i]);
     PrintFormat(line);
     line = "EMA_SRange_SPeriod";
-    for (int i = 0; i < m_SRange_Description.m_TrendRange; i++)
+    for (int i = 0; i < m_EMA_SRange_len; i++)
         line += " " + DoubleToString(m_EMA_SRange_SPeriod[i]);
     PrintFormat(line);
 }

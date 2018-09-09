@@ -2,7 +2,7 @@
 #property version     "1.00"
 #property description "This Indicator shows several EMA lines"
 
-input int g_SRange_LPeriod = 5;
+input int g_SRange_SPeriod = 5;
 input int g_SRange_MPeriod = 13;
 input int g_SRange_LPeriod = 21;
 
@@ -77,9 +77,9 @@ int OnCalculate(const int rates_total,
         g_EMA_SRange_MPeriod_Len = ArrayInitialize(g_EMA_SRange_MPeriod, EMPTY_VALUE);
         g_EMA_SRange_LPeriod_Len = ArrayInitialize(g_EMA_SRange_LPeriod, EMPTY_VALUE);
     }
-    CopyBuffer(g_hEMA_SRange_LPeriod, 0, 0, g_EMA_SRange_len, g_EMA_SRange_LPeriod);
-    CopyBuffer(g_hEMA_SRange_MPeriod, 0, 0, g_EMA_SRange_len, g_EMA_SRange_MPeriod);
-    CopyBuffer(g_hEMA_SRange_SPeriod, 0, 0, g_EMA_SRange_len, g_EMA_SRange_SPeriod);
+    CopyBuffer(g_hEMA_SRange_LPeriod, 0, 0, g_EMA_SRange_LPeriod_Len, g_EMA_SRange_LPeriod);
+    CopyBuffer(g_hEMA_SRange_MPeriod, 0, 0, g_EMA_SRange_MPeriod_Len, g_EMA_SRange_MPeriod);
+    CopyBuffer(g_hEMA_SRange_SPeriod, 0, 0, g_EMA_SRange_SPeriod_Len, g_EMA_SRange_SPeriod);
 
     return(rates_total);
 }
