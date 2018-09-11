@@ -4,6 +4,7 @@
 #property description "based on a special cirteria"
 
 #include "SRLineManager.mqh"
+#include "onTickTimer.mqh"
 
 input double Lots      = 0.01;
 
@@ -12,6 +13,7 @@ string ConfigFile = Symbol() + ".config.csv";
 string OrderListFile = Symbol() + ".orderList.csv";
 
 SRLineManager srLineManager();
+onTickTimer g_onTickTimer;
 
 //+------------------------------------------------------------------+
 //| Returns transaction textual description                          |
@@ -89,6 +91,7 @@ void OnInit()
     srLineManager.InitComponent(SRFile);
     srLineManager.PrintOrderList(OrderListFile); // for debug
     srLineManager.RemoveRemainingOrder();
+    g_onTickTimer.InitComponent(10); // trigger every 10 minute
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -96,6 +99,13 @@ void OnInit()
 int countTick = 0;
 void OnTick()
 {
+    if (g_onTickTimer.IsStart())
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            PrintFormat("-----------------------flush log file------------------------------------");
+        }
+    }
     double lastPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
     countTick++;
     if (countTick % 500000 == 0)
