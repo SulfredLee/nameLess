@@ -91,7 +91,7 @@ void OnInit()
     srLineManager.InitComponent(SRFile);
     srLineManager.PrintOrderList(OrderListFile); // for debug
     srLineManager.RemoveRemainingOrder();
-    g_onTickTimer.InitComponent(10); // trigger every 10 minute
+    g_onTickTimer.InitComponent(1); // trigger every 1 minute
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -99,13 +99,6 @@ void OnInit()
 int countTick = 0;
 void OnTick()
 {
-    if (g_onTickTimer.IsStart())
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            PrintFormat("-----------------------flush log file------------------------------------");
-        }
-    }
     double lastPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
     countTick++;
     if (countTick % 500000 == 0)
