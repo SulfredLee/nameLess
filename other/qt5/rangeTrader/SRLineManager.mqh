@@ -2,6 +2,7 @@
 #include "SRTracker.mqh"
 #include "LimitOrder.mqh"
 #include "triggerManager.mqh"
+#include "../../Include/DCUtil/Logger.mqh"
 
 #define EXPERT_MAGIC 338866   // MagicNumber of the expert
 
@@ -30,6 +31,8 @@ private:
     double m_digitShift;
     double m_priceStep;
     TriggerManager m_triggerManager;
+    Logger* m_Logger;
+    string m_LogLine;
 public:
     SRLineManager()
     {
@@ -45,8 +48,6 @@ public:
         m_isRunEA = true;
         m_digitShift = MathPow(10, Digits());
         m_priceStep = 1 / m_digitShift;
-
-        PrintFormat("m_priceStep: %f", m_priceStep);
     };
     ~SRLineManager()
     {
@@ -56,7 +57,7 @@ public:
         ArrayFree(m_SLOrder);
     };
 
-    void InitComponent(string SRFile);
+    void InitComponent(string SRFile, Logger* gLogger);
     void PrintOrderList(string outputFile);
     void OnTick(double lastPrice);
     bool HasNextRequest();
@@ -77,11 +78,15 @@ private:
     void ResetSLRecord();
 };
 
-void SRLineManager::InitComponent(string inSRFile)
+void SRLineManager::InitComponent(string inSRFile, Logger* gLogger)
 {
-    PrintFormat("InitComponent");
+    m_Logger = gLogger;
+
+    m_LogLine = StringFormat("%s:%d InitComponent", __FUNCTION__, __LINE__);
+    m_Logger.PrintLog(m_LogLine);
     m_SRLines_len = GetNumberOfSRLines(inSRFile);
-    PrintFormat("m_SRLines_len: %d", m_SRLines_len);
+    m_LogLine = StringFormat("%s:%d m_SRLines_len: %d", __FUNCTION__, __LINE__, m_SRLines_len);
+    m_Logger.PrintLog(m_LogLine);
     ArrayResize(m_SRLines, m_SRLines_len);
     ArrayResize(m_SLOrder, m_SellLimitLayers);
 
@@ -89,59 +94,74 @@ void SRLineManager::InitComponent(string inSRFile)
     InitOrders();
     HandleDecimal();
 
-    m_tracker.InitComponent(m_SellLimitLayers + m_BuyLimitLayers);
-    m_triggerManager.InitComponent("rangeTrader.config.ini");
+    m_tracker.InitComponent(m_SellLimitLayers + m_BuyLimitLayers, gLogger);
+    m_triggerManager.InitComponent("rangeTrader.config.ini", gLogger);
+
+    m_LogLine = StringFormat("%s:%d m_priceStep: %f", __FUNCTION__, __LINE__, m_priceStep);
+    m_Logger.PrintLog(m_LogLine);
 }
 
 int SRLineManager::GetNumberOfSRLines(string inputFile)
 {
-    PrintFormat("GetNumberOfSRLines()");
+    m_LogLine = StringFormat("%s:%d GetNumberOfSRLines()", __FUNCTION__, __LINE__);
+    m_Logger.PrintLog(m_LogLine);
     int numSRLine = 0;
     int FH = FileOpen(m_inputFolder + "//" + inputFile, FILE_TXT|FILE_READ);
     if(FH != INVALID_HANDLE)
     {
-        PrintFormat("Reading SRFile: %s", inputFile);
-        PrintFormat("File path: %s\\Files\\", TerminalInfoString(TERMINAL_DATA_PATH));
+        m_LogLine = StringFormat("Reading SRFile: %s", inputFile);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("File path: %s\\Files\\", TerminalInfoString(TERMINAL_DATA_PATH));
+        m_Logger.PrintLog(m_LogLine);
 
         while (!FileIsEnding(FH))
         {
             FileReadString(FH);
             numSRLine++;
         }
-        PrintFormat("Get number of m_SRLines: %d", numSRLine);
+        m_LogLine = StringFormat("Get number of m_SRLines: %d", numSRLine);
+        m_Logger.PrintLog(m_LogLine);
 
         FileClose(FH);
-        PrintFormat("Data is read, %s file is closed", inputFile);
+        m_LogLine = StringFormat("Data is read, %s file is closed", inputFile);
+        m_Logger.PrintLog(m_LogLine);
     }
     else
     {
-        PrintFormat("Failed to open %s file, Error code = %d", inputFile, GetLastError());
+        m_LogLine = StringFormat("Failed to open %s file, Error code = %d", inputFile, GetLastError());
+        m_Logger.PrintLog(m_LogLine);
     }
     return numSRLine;
 }
 
 void SRLineManager::InitSRLines(string inputFile)
 {
-    PrintFormat("InitSRLines()");
+    m_LogLine = StringFormat("%s:%d InitSRLines()", __FUNCTION__, __LINE__);
+    m_Logger.PrintLog(m_LogLine);
     int FH = FileOpen(m_inputFolder + "//" + inputFile, FILE_CSV|FILE_READ, ",");
     if(FH != INVALID_HANDLE)
     {
-        PrintFormat("Reading SRFile: %s", inputFile);
-        PrintFormat("File path: %s\\Files\\", TerminalInfoString(TERMINAL_DATA_PATH));
+        m_LogLine = StringFormat("Reading SRFile: %s", inputFile);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("File path: %s\\Files\\", TerminalInfoString(TERMINAL_DATA_PATH));
+        m_Logger.PrintLog(m_LogLine);
 
         int index = 0;
         while (!FileIsEnding(FH))
         {
             m_SRLines[index++] = StringToDouble(FileReadString(FH)); // read the first column
-            PrintFormat("Damage Debug, index: %f", m_SRLines[index - 1]);
+            m_LogLine = StringFormat("Damage Debug, index: %f", m_SRLines[index - 1]);
+            m_Logger.PrintLog(m_LogLine);
         }
         //--- close the file
         FileClose(FH);
-        PrintFormat("Data is read, %s file is closed", inputFile);
+        m_LogLine = StringFormat("Data is read, %s file is closed", inputFile);
+        m_Logger.PrintLog(m_LogLine);
     }
     else
     {
-        PrintFormat("Failed to open %s file, Error code = %d", inputFile, GetLastError());
+        m_LogLine = StringFormat("Failed to open %s file, Error code = %d", inputFile, GetLastError());
+        m_Logger.PrintLog(m_LogLine);
     }
 }
 
@@ -149,7 +169,8 @@ void SRLineManager::InitOrders()
 {
     m_SellLimitOrder_len = m_SRLines_len - 1;
     m_BuyLimitOrder_len = m_SRLines_len - 1;
-    PrintFormat("m_SellLimitOrder_len: %d, m_BuyLimitOrder_len: %d", m_SellLimitOrder_len, m_BuyLimitOrder_len);
+    m_LogLine = StringFormat("m_SellLimitOrder_len: %d, m_BuyLimitOrder_len: %d", m_SellLimitOrder_len, m_BuyLimitOrder_len);
+    m_Logger.PrintLog(m_LogLine);
 
     ArrayResize(m_SellLimitOrder, m_SellLimitOrder_len);
     ArrayResize(m_BuyLimitOrder, m_BuyLimitOrder_len);
@@ -191,20 +212,24 @@ void SRLineManager::PrintOrderList(string outputFile)
     int fileHandle = FileOpen(m_outputFolder + "//" + outputFile, FILE_READ|FILE_WRITE|FILE_CSV);
     if(fileHandle != INVALID_HANDLE)
     {
-        PrintFormat("m_SellLimitOrder_len: %d, m_BuyLimitOrder_len: %d", m_SellLimitOrder_len, m_BuyLimitOrder_len);
+        m_LogLine = StringFormat("m_SellLimitOrder_len: %d, m_BuyLimitOrder_len: %d", m_SellLimitOrder_len, m_BuyLimitOrder_len);
+        m_Logger.PrintLog(m_LogLine);
         // CSV format : Sell limit, TP(Sell limit), SL(Sell limit), Buy limit, TP(Buy limit), SL(Buy limit)
         for (int i = 0; i < m_SellLimitOrder_len; i++)
         {
             FileWrite(fileHandle, m_SellLimitOrder[i].m_price, m_SellLimitOrder[i].m_TP, m_SellLimitOrder[i].m_SL, m_BuyLimitOrder[i].m_price, m_BuyLimitOrder[i].m_TP, m_BuyLimitOrder[i].m_SL);
-            PrintFormat("m_SellLimitOrder[i].m_price: %f, m_SellLimitOrder[i].m_TP: %f, m_SellLimitOrder[i].m_SL: %f, m_BuyLimitOrder[i].m_price: %f, m_BuyLimitOrder[i].m_TP: %f, m_BuyLimitOrder[i].m_SL: %f", m_SellLimitOrder[i].m_price, m_SellLimitOrder[i].m_TP, m_SellLimitOrder[i].m_SL, m_BuyLimitOrder[i].m_price, m_BuyLimitOrder[i].m_TP, m_BuyLimitOrder[i].m_SL);
+            m_LogLine = StringFormat("m_SellLimitOrder[i].m_price: %f, m_SellLimitOrder[i].m_TP: %f, m_SellLimitOrder[i].m_SL: %f, m_BuyLimitOrder[i].m_price: %f, m_BuyLimitOrder[i].m_TP: %f, m_BuyLimitOrder[i].m_SL: %f", m_SellLimitOrder[i].m_price, m_SellLimitOrder[i].m_TP, m_SellLimitOrder[i].m_SL, m_BuyLimitOrder[i].m_price, m_BuyLimitOrder[i].m_TP, m_BuyLimitOrder[i].m_SL);
+            m_Logger.PrintLog(m_LogLine);
         }
         //--- close the file
         FileClose(fileHandle);
-        PrintFormat("Data is written, %s file is closed", outputFile);
+        m_LogLine = StringFormat("Data is written, %s file is closed", outputFile);
+        m_Logger.PrintLog(m_LogLine);
     }
     else
     {
-        PrintFormat("Failed to open %s file, Error code = %d", outputFile, GetLastError());
+        m_LogLine = StringFormat("Failed to open %s file, Error code = %d", outputFile, GetLastError());
+        m_Logger.PrintLog(m_LogLine);
     }
 }
 
@@ -224,27 +249,38 @@ void SRLineManager::OnTick(double lastPrice)
         }
         ResetSLRecord();
         m_tracker.RefreshOrder();
-        PrintFormat("First After InitTracker-----------------------------------------");
-        PrintFormat("lastPrice: %f", lastPrice);
+        m_LogLine = StringFormat("%s:%d First After InitTracker-----------------------------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("lastPrice: %f", lastPrice);
+        m_Logger.PrintLog(m_LogLine);
         m_tracker.DebugPrint();
-        PrintFormat("---------------------------------------------------");
-        PrintFormat("---------------------------------------------------");
-        PrintFormat("---------------------------------------------------");
+        m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
     }
     m_lastPrice = lastPrice;
 
     int hitIdx = m_tracker.IsLimit_Hit(m_lastPrice); // hit a buy limit or sell limit
     if (hitIdx != -1)
     {
-        PrintFormat("IsLimit_Hit()--------------------------------------------");
+        m_LogLine = StringFormat("%s:%d IsLimit_Hit()--------------------------------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
         m_isFirstHit = false;
-        PrintFormat("m_lastPrice: %f", m_lastPrice);
+        m_LogLine = StringFormat("m_lastPrice: %f", m_lastPrice);
+        m_Logger.PrintLog(m_LogLine);
         m_tracker.ActivateOrder(hitIdx);
-        PrintFormat("After ActivatedOrder");
+        m_LogLine = StringFormat("%s:%d After ActivatedOrder", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
         m_tracker.DebugPrint();
-        PrintFormat("---------------------------------------------------");
-        PrintFormat("---------------------------------------------------");
-        PrintFormat("---------------------------------------------------");
+        m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
     }
     if (!m_isFirstHit)
     {
@@ -252,49 +288,64 @@ void SRLineManager::OnTick(double lastPrice)
         hitIdx = m_tracker.IsTP_SL_Hit(m_lastPrice, orderHitType); // hit TP or SL
         if (hitIdx != -1)
         {
-            PrintFormat("m_lastPrice: %f", m_lastPrice);
+            m_LogLine = StringFormat("m_lastPrice: %f", m_lastPrice);
+            m_Logger.PrintLog(m_LogLine);
             if (m_tracker.IsEmptyOrder())
             {
-                PrintFormat("IsEmptyOrder()----------------------------------------------");
+                m_LogLine = StringFormat("%s:%d IsEmptyOrder()----------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
                 RemoveRemainingOrder();
                 m_tracker.Reset();
                 if (!InitTracker())
                 {
-                    PrintFormat("Fail InitTracker");
+                    m_LogLine = StringFormat("%s:%d Fail InitTracker", __FUNCTION__, __LINE__);
+                    m_Logger.PrintLog(m_LogLine);
                     m_tracker.Reset();
                     m_lastPrice = -1;
                     return;
                 }
                 ResetSLRecord();
                 m_tracker.RefreshOrder();
-                PrintFormat("Second After InitTracker-------------------------------------");
+                m_LogLine = StringFormat("%s:%d Second After InitTracker-------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
                 m_tracker.DebugPrint();
-                PrintFormat("---------------------------------------------------");
-                PrintFormat("---------------------------------------------------");
-                PrintFormat("---------------------------------------------------");
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
             }
             else if(orderHitType == TP_HIT)
             {
-                PrintFormat("TP Hit--------------------------------------");
+                m_LogLine = StringFormat("%s:%d TP Hit--------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
                 ResetSLRecord();
 
                 m_tracker.ReFillOrder();
-                PrintFormat("After ReFillOrder");
+                m_LogLine = StringFormat("%s:%d After ReFillOrder", __FUNCTION__, __LINE__);
                 m_tracker.DebugPrint();
-                PrintFormat("---------------------------------------------------");
-                PrintFormat("---------------------------------------------------");
-                PrintFormat("---------------------------------------------------");
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
             }
             else if (orderHitType == SL_HIT)
             {
-                PrintFormat("SL HIT------------------------------------------");
+                m_LogLine = StringFormat("%s:%d SL HIT------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
                 SLEmailAlert(hitIdx);
                 m_tracker.RemoveLimitOrder();
-                PrintFormat("After Remove Limit Order");
-                m_tracker.DebugPrint();
-                PrintFormat("---------------------------------------------------");
-                PrintFormat("---------------------------------------------------");
-                PrintFormat("---------------------------------------------------");
+                m_LogLine = StringFormat("%s:%d After Remove Limit Order", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
+                m_LogLine = StringFormat("%s:%d ---------------------------------------------------", __FUNCTION__, __LINE__);
+                m_Logger.PrintLog(m_LogLine);
             }
         }
     }
@@ -400,7 +451,8 @@ double SRLineManager::GetDecimalRounding(const double& inData)
 
 void SRLineManager::RemoveRemainingOrder()
 {
-    PrintFormat("Called RemoveRemainingOrder()");
+    m_LogLine = StringFormat("%s:%d Called RemoveRemainingOrder()", __FUNCTION__, __LINE__);
+    m_Logger.PrintLog(m_LogLine);
     MqlTradeRequest request={0};
     MqlTradeResult  result={0};
     int total = OrdersTotal(); // total number of placed pending orders
@@ -413,7 +465,8 @@ void SRLineManager::RemoveRemainingOrder()
         //--- if the MagicNumber matches
         if (magic == EXPERT_MAGIC && symbol == Symbol())
         {
-            PrintFormat("Cleaning order %d", i);
+            m_LogLine = StringFormat("Cleaning order %d", i);
+            m_Logger.PrintLog(m_LogLine);
             //--- zeroing the request and result values
             ZeroMemory(request);
             ZeroMemory(result);
@@ -422,16 +475,21 @@ void SRLineManager::RemoveRemainingOrder()
             request.order = order_ticket;                         // order ticket
             //--- send the request
             if (!OrderSend(request,result))
-                PrintFormat("OrderSend error %d",GetLastError());  // if unable to send the request, output the error code
+            {
+                m_LogLine = StringFormat("OrderSend error %d",GetLastError());  // if unable to send the request, output the error code
+                m_Logger.PrintLog(m_LogLine);
+            }
             //--- information about the operation
-            PrintFormat("retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+            m_LogLine = StringFormat("retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+            m_Logger.PrintLog(m_LogLine);
         }
     }
 }
 
 void SRLineManager::SLEmailAlert(int hitIdx)
 {
-    PrintFormat("SLEmailAlert()");
+    m_LogLine = StringFormat("%s:%d SLEmailAlert()", __FUNCTION__, __LINE__);
+    m_Logger.PrintLog(m_LogLine);
     // add SL record
     m_SLOrder[m_SLOrder_len++] = m_tracker.GetHitOrder();
 
@@ -447,21 +505,28 @@ void SRLineManager::SLEmailAlert(int hitIdx)
             content += LimitOrderToString(m_SLOrder[i]);
             content += "\n";
         }
-        PrintFormat("%s", content);
-        PrintFormat("SendMail is called");
+        m_LogLine = StringFormat("%s", content);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("%s:%d SendMail is called", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
 
         if (!SendMail(subject, content))
         {
-            PrintFormat("SendMail error %d", GetLastError());
+            m_LogLine = StringFormat("SendMail error %d", GetLastError());
+            m_Logger.PrintLog(m_LogLine);
         }
     }
     else if (m_SLOrder_len >= 3)
     {
         m_isRunEA = false;
-        PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
-        PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
-        PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
-        PrintFormat("-------------------------EA is stopped due to 3 SL hit----------------------");
+        m_LogLine = StringFormat("%s:%d -------------------------EA is stopped due to 3 SL hit----------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("%s:%d -------------------------EA is stopped due to 3 SL hit----------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("%s:%d -------------------------EA is stopped due to 3 SL hit----------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
+        m_LogLine = StringFormat("%s:%d -------------------------EA is stopped due to 3 SL hit----------------------", __FUNCTION__, __LINE__);
+        m_Logger.PrintLog(m_LogLine);
         RemoveRemainingOrder();
         m_tracker.Reset();
     }
@@ -469,7 +534,8 @@ void SRLineManager::SLEmailAlert(int hitIdx)
 
 void SRLineManager::ResetSLRecord()
 {
-    PrintFormat("ResetSLRecord()");
+    m_LogLine = StringFormat("%s:%d ResetSLRecord()", __FUNCTION__, __LINE__);
+    m_Logger.PrintLog(m_LogLine);
     m_SLOrder_len = 0;
 }
 
@@ -485,12 +551,15 @@ void SRLineManager::TestEmailAlert()
         content += LimitOrderToString(m_SLOrder[i]);
         content += "\n";
     }
-    PrintFormat("%s", content);
-    PrintFormat("SendMail is called");
+    m_LogLine = StringFormat("%s", content);
+    m_Logger.PrintLog(m_LogLine);
+    m_LogLine = StringFormat("%s:%d SendMail is called", __FUNCTION__, __LINE__);
+    m_Logger.PrintLog(m_LogLine);
 
     if (!SendMail(subject, content))
     {
-        PrintFormat("SendMail error %d", GetLastError());
+        m_LogLine = StringFormat("SendMail error %d", GetLastError());
+        m_Logger.PrintLog(m_LogLine);
     }
 }
 

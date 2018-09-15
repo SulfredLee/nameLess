@@ -1,6 +1,7 @@
 #property copyright "Copyright 2018, Damage Company"
 
 #include "LimitOrder.mqh"
+#include "../../Include/DCUtil/Logger.mqh"
 
 #define EPSILON 0.00000000001
 
@@ -21,6 +22,8 @@ private:
     LimitOrder m_ActivatedStack[]; // here sotred the orders which have been sent to the server
     int m_ActivatedStack_len;
     LimitOrder m_hitOrder;
+    Logger* m_Logger;
+    string m_LogLine;
 public:
     SRTracker()
     {
@@ -34,7 +37,7 @@ public:
         ArrayFree(m_ActivatedStack);
     }
 
-    void InitComponent(int orderStack_len);
+    void InitComponent(int orderStack_len, Logger* gLogger);
 
     bool AddOrder(const LimitOrder& inOrder);
     int IsLimit_Hit(const double& lastPrice);
@@ -56,7 +59,7 @@ private:
     bool EqualDoubles(double d1,double d2,double epsilon);
 };
 
-void SRTracker::InitComponent(int orderStack_len)
+void SRTracker::InitComponent(int orderStack_len, Logger* gLogger)
 {
     m_orderStatck_len = orderStack_len;
     Reset();
@@ -64,6 +67,8 @@ void SRTracker::InitComponent(int orderStack_len)
     ArrayResize(m_curLimitStack, m_orderStatck_len);
     ArrayResize(m_stagingStack, m_orderStatck_len); // the maximum size of the stagingStack is twice of current limit stack, since we have to handle clear order
     ArrayResize(m_ActivatedStack, m_orderStatck_len); // the maximum size of the stagingStack is equal to total limit stack
+
+    m_Logger = gLogger;
 }
 
 bool SRTracker::AddOrder(const LimitOrder& inOrder)
@@ -103,7 +108,8 @@ int SRTracker::IsTP_SL_Hit(const double& lastPrice, ORDER_HIT_TYPE& outHitType)
             else
                 outHitType = SL_HIT;
             m_hitOrder = m_ActivatedStack[i];
-            PrintFormat("IsTP_SL_Hit: m_hitOrder: %s, lastPrice: %f", LimitOrderToString(m_hitOrder), lastPrice);
+            m_LogLine = StringFormat("IsTP_SL_Hit: m_hitOrder: %s, lastPrice: %f", LimitOrderToString(m_hitOrder), lastPrice);
+            m_Logger.PrintLog(m_LogLine);
             RemoveFromArray(m_ActivatedStack, i, m_ActivatedStack_len--);
             return i;
         }
@@ -119,7 +125,8 @@ void SRTracker::MakeAnOrder(int Idx)
     }
     else
     {
-        PrintFormat("MakeAnOrder: not enough space for new order. m_stagingStack_len: %d, m_orderStatck_len: %d", m_stagingStack_len, m_orderStatck_len);
+        m_LogLine = StringFormat("MakeAnOrder: not enough space for new order. m_stagingStack_len: %d, m_orderStatck_len: %d", m_stagingStack_len, m_orderStatck_len);
+        m_Logger.PrintLog(m_LogLine);
     }
 }
 
@@ -154,7 +161,8 @@ void SRTracker::ReFillOrder()
     }
     else
     {
-        PrintFormat("ReFillOrder: not enough space for new order. m_stagingStack_len: %d, m_orderStatck_len: %d", m_stagingStack_len, m_orderStatck_len);
+        m_LogLine = StringFormat("ReFillOrder: not enough space for new order. m_stagingStack_len: %d, m_orderStatck_len: %d", m_stagingStack_len, m_orderStatck_len);
+        m_Logger.PrintLog(m_LogLine);
     }
 }
 
@@ -196,20 +204,26 @@ void SRTracker::RemoveLimitOrder()
 
 void SRTracker::DebugPrint()
 {
-    PrintFormat("m_curLimitStack------------------------------len: %d", m_curLimitStack_len);
+    m_LogLine = StringFormat("m_curLimitStack------------------------------len: %d", m_curLimitStack_len);
+    m_Logger.PrintLog(m_LogLine);
     for (int i = 0; i < m_curLimitStack_len; i++)
     {
-        PrintFormat("%s", LimitOrderToString(m_curLimitStack[i]));
+        m_LogLine = StringFormat("%s", LimitOrderToString(m_curLimitStack[i]));
+        m_Logger.PrintLog(m_LogLine);
     }
-    PrintFormat("m_stagingStack--------------------------len: %d", m_stagingStack_len);
+    m_LogLine = StringFormat("m_stagingStack--------------------------len: %d", m_stagingStack_len);
+    m_Logger.PrintLog(m_LogLine);
     for (int i = 0; i < m_stagingStack_len; i++)
     {
-        PrintFormat("%s", LimitOrderToString(m_stagingStack[i]));
+        m_LogLine = StringFormat("%s", LimitOrderToString(m_stagingStack[i]));
+        m_Logger.PrintLog(m_LogLine);
     }
-    PrintFormat("m_ActivatedStack--------------------------len: %d", m_ActivatedStack_len);
+    m_LogLine = StringFormat("m_ActivatedStack--------------------------len: %d", m_ActivatedStack_len);
+    m_Logger.PrintLog(m_LogLine);
     for (int i = 0; i < m_ActivatedStack_len; i++)
     {
-        PrintFormat("%s", LimitOrderToString(m_ActivatedStack[i]));
+        m_LogLine = StringFormat("%s", LimitOrderToString(m_ActivatedStack[i]));
+        m_Logger.PrintLog(m_LogLine);
     }
 }
 

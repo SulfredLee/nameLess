@@ -1,4 +1,5 @@
 #property copyright "Copyright 2018, Damage Company"
+#include "../../Include/DCUtil/Logger.mqh"
 
 struct TriggerRange
 {
@@ -13,6 +14,8 @@ private:
     int m_triggerArray_len;
     string m_inputFile;
     string m_inputFolder;
+    Logger* m_Logger;
+    string m_LogLine;
 public:
     TriggerManager()
     {
@@ -20,14 +23,15 @@ public:
     }
     ~TriggerManager(){}
 
-    void InitComponent(string inputFile);
+    void InitComponent(string inputFile, Logger* gLogger);
     bool IsTriggerOn(double last);
 private:
     void GetRange();
 };
 
-void TriggerManager::InitComponent(string inputFile)
+void TriggerManager::InitComponent(string inputFile, Logger* gLogger)
 {
+    m_Logger = gLogger;
     m_inputFile = inputFile;
     m_triggerArray_len = 0;
     GetRange();
@@ -76,10 +80,12 @@ void TriggerManager::GetRange()
             }
         }
         FileClose(FH);
-        PrintFormat("Data is read, %s file is closed", m_inputFile);
+        m_LogLine = StringFormat("Data is read, %s file is closed", m_inputFile);
+        m_Logger.PrintLog(m_LogLine);
     }
     else
     {
-        PrintFormat("Failed to open %s file, Error code = %d", m_inputFile, GetLastError());
+        m_LogLine = StringFormat("Failed to open %s file, Error code = %d", m_inputFile, GetLastError());
+        m_Logger.PrintLog(m_LogLine);
     }
 }

@@ -4,6 +4,7 @@
 #property description "based on a special cirteria"
 
 #include "SRLineManager.mqh"
+#include "../../Include/DCUtil/Logger.mqh"
 
 input double Lots      = 0.01;
 
@@ -12,6 +13,8 @@ string ConfigFile = Symbol() + ".config.csv";
 string OrderListFile = Symbol() + ".orderList.csv";
 
 SRLineManager srLineManager();
+Logger g_Logger("rangeTrader");
+string g_LogLine;
 
 //+------------------------------------------------------------------+
 //| Returns transaction textual description                          |
@@ -85,8 +88,9 @@ string DebugPrintTradeResult(const MqlTradeResult &result)
 //+------------------------------------------------------------------+
 void OnInit()
 {
-    PrintFormat("OnInit()");
-    srLineManager.InitComponent(SRFile);
+    g_LogLine = StringFormat("%s:%d OnInit()", __FUNCTION__, __LINE__);
+    g_Logger.PrintLog(g_LogLine);
+    srLineManager.InitComponent(SRFile, &g_Logger);
     srLineManager.PrintOrderList(OrderListFile); // for debug
     srLineManager.RemoveRemainingOrder();
 }
@@ -98,9 +102,11 @@ void OnTick()
 {
     double lastPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
     countTick++;
+    g_Logger.OnTick();
     if (countTick % 500000 == 0)
     {
-        PrintFormat("countTick: %d", countTick);
+        g_LogLine = StringFormat("countTick: %d", countTick);
+        g_Logger.PrintLog(g_LogLine);
     }
     if (srLineManager.IsWatingLastPrice())
         srLineManager.OnTick(lastPrice);
@@ -110,14 +116,19 @@ void OnTick()
         request.magic = EXPERT_MAGIC;
         request.symbol = Symbol();
         request.volume = Lots;
-        PrintFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeRequest(request));
+        g_LogLine = StringFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeRequest(request));
+        g_Logger.PrintLog(g_LogLine);
         MqlTradeResult result;
         ZeroMemory(result);
         //--- send the request
         if(!OrderSend(request,result))
-            PrintFormat("OrderSend error %d", GetLastError());     // if unable to send the request, output the error code
+        {
+            g_LogLine = StringFormat("OrderSend error %d", GetLastError());     // if unable to send the request, output the error code
+            g_Logger.PrintLog(g_LogLine);
+        }
         //--- information about the operation
-        PrintFormat("retcode=%u  deal=%I64u  order=%I64u", result.retcode, result.deal, result.order);
+        g_LogLine = StringFormat("retcode=%u  deal=%I64u  order=%I64u", result.retcode, result.deal, result.order);
+        g_Logger.PrintLog(g_LogLine);
     }
     return;
 }
@@ -137,10 +148,14 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
     }
     double bid = SymbolInfoDouble(Symbol(), SYMBOL_BID);
     double ask = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
-    PrintFormat("%s:%d bid: %f, ask: %f", __FUNCTION__, __LINE__, bid, ask);
-    PrintFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeTransaction(trans));
-    PrintFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeRequest(request));
-    PrintFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeResult(result));
+    g_LogLine = StringFormat("%s:%d bid: %f, ask: %f", __FUNCTION__, __LINE__, bid, ask);
+    g_Logger.PrintLog(g_LogLine);
+    g_LogLine = StringFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeTransaction(trans));
+    g_Logger.PrintLog(g_LogLine);
+    g_LogLine = StringFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeRequest(request));
+    g_Logger.PrintLog(g_LogLine);
+    g_LogLine = StringFormat("%s:%d %s", __FUNCTION__, __LINE__, DebugPrintTradeResult(result));
+    g_Logger.PrintLog(g_LogLine);
 }
 //+------------------------------------------------------------------+
 //|                                                                  |

@@ -8,9 +8,10 @@ private:
     int m_timeDifferent; // second
     int m_preTime;
     string m_fileName;
+    string m_EAName;
     CFileTxt m_FH;
 public:
-    Logger();
+    Logger(string EAName);
     ~Logger();
 
     void PrintLog(const string& logMsg);
@@ -20,8 +21,9 @@ private:
     void OpenNewFile();
 };
 
-Logger::Logger()
+Logger::Logger(string EAName)
 {
+    m_EAName = EAName;
     OpenNewFile();
 
     m_preTime = TimeCurrent();
@@ -46,7 +48,7 @@ void Logger::OnTick()
 
 void Logger::PrintLog(const string& logMsg)
 {
-    string line = GetTimeStamp() + " " + logMsg;
+    string line = GetTimeStamp() + " " + logMsg + "\n";
     m_FH.WriteString(line);
     PrintFormat("%s", logMsg);
 }
@@ -60,7 +62,7 @@ string Logger::GetTimeStamp()
 
 void Logger::OpenNewFile()
 {
-    m_fileName = Symbol() + "_" + GetTimeStamp() + ".log";
+    m_fileName = m_EAName + "_" + Symbol() + "_" + GetTimeStamp() + ".log";
     int fHD = m_FH.Open(m_fileName, FILE_READ|FILE_WRITE|FILE_TXT);
     if (fHD < 0)
         PrintFormat("Logger Error %d", GetLastError());
