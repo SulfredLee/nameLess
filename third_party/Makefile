@@ -77,7 +77,7 @@ openssl: .openssl
 	./configure --prefix=/usr/local/cscope/15.8b; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/cscope/15.8b/bin:\$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/cscope/15.8b/bin:\$$PATH" >> ~/.bashrc
 	touch $@
 
 .OpenCC:
@@ -88,7 +88,7 @@ openssl: .openssl
 	cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local/OpenCC ..; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/OpenCC/bin:\$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/OpenCC/bin:\$$PATH" >> ~/.bashrc
 	touch $@
 
 .ycmd:
@@ -116,7 +116,7 @@ openssl: .openssl
 	./configure --prefix=/usr/local/global/6.6.2; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/global/6.6.2/bin:\$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/global/6.6.2/bin:\$$PATH" >> ~/.bashrc
 	touch $@
 
 .emacs:
@@ -131,7 +131,7 @@ openssl: .openssl
 	./configure --prefix=/usr/local/emacs/26.1; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/emacs/26.1/bin:\$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/emacs/26.1/bin:\$$PATH" >> ~/.bashrc
 	touch $@
 
 .ninja:
