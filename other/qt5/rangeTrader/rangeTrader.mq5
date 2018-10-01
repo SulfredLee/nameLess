@@ -6,7 +6,7 @@
 #include "SRLineManager.mqh"
 #include "../../Include/DCUtil/Logger.mqh"
 
-input double Lots      = 0.01;
+input double Lots      = 0.01; // Lots
 
 string SRFile = Symbol() + ".csv";
 string ConfigFile = Symbol() + ".config.csv";
@@ -92,7 +92,7 @@ void OnInit()
     g_Logger.PrintLog(g_LogLine);
     srLineManager.InitComponent(SRFile, &g_Logger);
     srLineManager.PrintOrderList(OrderListFile); // for debug
-    srLineManager.RemoveRemainingOrder();
+    srLineManager.ReloadStatus();
 }
 //+------------------------------------------------------------------+
 //|                                                                  |

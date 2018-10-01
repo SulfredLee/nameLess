@@ -66,6 +66,7 @@ public:
     void SetIndicatorsLen(int BL_Indicators_len, int SL_Indicators_len);
     void TestEmailAlert();
     bool IsWatingLastPrice();
+    void ReloadStatus();
 
 private:
     int GetNumberOfSRLines(string inputFile);
@@ -76,6 +77,9 @@ private:
     double GetDecimalRounding(const double& inData);
     void SLEmailAlert(int hitIdx);
     void ResetSLRecord();
+    void ReloadPendingOrder();
+    void ReloadPosition();
+    void ReloadTPSL();
 };
 
 void SRLineManager::InitComponent(string inSRFile, Logger* gLogger)
@@ -569,4 +573,23 @@ bool SRLineManager::IsWatingLastPrice()
         return true;
     else
         return false;
+}
+
+void SRLineManager::ReloadStatus()
+{
+    ReloadPendingOrder();
+    ReloadPosition();
+    ReloadTPSL();
+}
+
+void SRLineManager::ReloadPendingOrder()
+{
+}
+
+void SRLineManager::ReloadPosition()
+{
+}
+
+void SRLineManager::ReloadTPSL()
+{
 }
