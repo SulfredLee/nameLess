@@ -103,9 +103,12 @@ openssl: .openssl
 .spacemacs:
 	git clone https://github.com/syl20bnr/spacemacs.git ~/.emacs.d
 	sudo apt-get install meld
-	meld ./VIMConfig/spacemacs ~/.spacemacs # update the config
+	source ~/.bashrc
+	emacs --insecure
+	meld ../other/VIMConfig/spacemacs ~/.spacemacs # update the config
 
 .global:
+	sudo apt-get install libncurses5-dev
 	if [ ! -e global-6.6.2.tar.gz ]; \
 	then \
 		wget https://ftp.gnu.org/pub/gnu/global/global-6.6.2.tar.gz; \
