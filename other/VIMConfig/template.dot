@@ -1,0 +1,12 @@
+digraph {
+  label="Template";
+
+  // this is comment
+  subgraph cluster_temp {
+    _0001[label="temp.c\nThis is new line", shape="box", style=rounded];
+    label = "Label of cluster";
+    labeljust = "l";
+  }
+
+  _0015 -> _0014 [dir="both", label="    Log = testing.*HTTP.*status"];
+}
