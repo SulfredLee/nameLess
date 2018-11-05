@@ -1,166 +1,66 @@
-/**
- * section: InputOutput
- * synopsis: Example of custom Input/Output
- * purpose: Demonstrate the use of xmlRegisterInputCallbacks
- *          to build a custom I/O layer, this is used in an
- *          XInclude method context to show how dynamic document can
- *          be built in a clean way.
- * usage: io1
- * test: io1 > io1.tmp && diff io1.tmp $(srcdir)/io1.res
- * author: Daniel Veillard
- * copy: see Copyright for the status of this software.
+/*
+ * adopted from http://xmlsoft.org/tutorial/apg.html
  */
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <libxml/xinclude.h>
-#include <libxml/xmlIO.h>
-
-#ifdef LIBXML_XINCLUDE_ENABLED
-static const char *result = "<list><people>a</people><people>b</people></list>";
-static const char *cur = NULL;
-static int rlen;
-
 /**
- * sqlMatch:
- * @URI: an URI to test
+ * print_element_names:
+ * @a_node: the initial xml node to consider.
  *
- * Check for an sql: query
- *
- * Returns 1 if yes and 0 if another Input module should be used
+ * Prints the names of the all the xml elements
+ * that are siblings or children of a given xml node.
  */
-static int
-sqlMatch(const char * URI) {
-    if ((URI != NULL) && (!strncmp(URI, "sql:", 4)))
-        return(1);
-    return(0);
-}
+static void
+print_element_names(xmlNodePtr a_node)
+{
+    xmlNodePtr cur_node = NULL;
 
-/**
- * sqlOpen:
- * @URI: an URI to test
- *
- * Return a pointer to the sql: query handler, in this example simply
- * the current pointer...
- *
- * Returns an Input context or NULL in case or error
- */
-static void *
-sqlOpen(const char * URI) {
-    if ((URI == NULL) || (strncmp(URI, "sql:", 4)))
-        return(NULL);
-    cur = result;
-    rlen = strlen(result);
-    return((void *) cur);
-}
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE) {
+            printf("node type: Element, name: %s\n", cur_node->name);
+        }
+        if (cur_node->type == XML_TEXT_NODE) {
+            printf("node type: Text, content: %s, length: %d\n", cur_node->content, strlen(cur_node->content));
+        }
 
-/**
- * sqlClose:
- * @context: the read context
- *
- * Close the sql: query handler
- *
- * Returns 0 or -1 in case of error
- */
-static int
-sqlClose(void * context) {
-    if (context == NULL) return(-1);
-    cur = NULL;
-    rlen = 0;
-    return(0);
-}
-
-/**
- * sqlRead:
- * @context: the read context
- * @buffer: where to store data
- * @len: number of bytes to read
- *
- * Implement an sql: query read.
- *
- * Returns the number of bytes read or -1 in case of error
- */
-static int
-sqlRead(void * context, char * buffer, int len) {
-   const char *ptr = (const char *) context;
-
-   if ((context == NULL) || (buffer == NULL) || (len < 0))
-       return(-1);
-
-   if (len > rlen) len = rlen;
-   memcpy(buffer, ptr, len);
-   rlen -= len;
-   return(len);
-}
-
-const char *include = "<?xml version='1.0'?>\n\
-<document xmlns:xi=\"http://www.w3.org/2003/XInclude\">\n\
-  <p>List of people:</p>\n\
-  <xi:include href=\"sql:select_name_from_people\"/>\n\
-</document>\n";
-
-int main(void) {
-    xmlDocPtr doc;
-
-    /*
-     * this initialize the library and check potential ABI mismatches
-     * between the version it was compiled for and the actual shared
-     * library used.
-     */
-    LIBXML_TEST_VERSION
-
-    /*
-     * register the new I/O handlers
-     */
-    if (xmlRegisterInputCallbacks(sqlMatch, sqlOpen, sqlRead, sqlClose) < 0) {
-        fprintf(stderr, "failed to register SQL handler\n");
-	exit(1);
+        print_element_names(cur_node->children);
     }
-    /*
-     * parse include into a document
-     */
-    doc = xmlReadMemory(include, strlen(include), "include.xml", NULL, 0);
-    if (doc == NULL) {
-        fprintf(stderr, "failed to parse the including file\n");
-	exit(1);
+}
+
+int
+main(int argc, char **argv) {
+
+    char         *docname;
+    xmlDocPtr    doc;
+    xmlNodePtr   cur;
+    xmlChar      *uri;
+
+    if (argc <= 1) {
+        printf("Usage: %s docname\n", argv[0]);
+        return(0);
     }
 
-    /*
-     * apply the XInclude process, this should trigger the I/O just
-     * registered.
-     */
-    if (xmlXIncludeProcess(doc) <= 0) {
-        fprintf(stderr, "XInclude processing failed\n");
-	exit(1);
-    }
+    docname = argv[1];
 
-#ifdef LIBXML_OUTPUT_ENABLED
-    /*
-     * save the output for checking to stdout
-     */
-    xmlDocDump(stdout, doc);
-#endif
-
-    /*
-     * Free the document
-     */
+    doc = xmlParseFile(docname);
+    cur = xmlDocGetRootElement(doc);
+    print_element_names(cur);
     xmlFreeDoc(doc);
+    return 1;
 
-    /*
-     * Cleanup function for the XML library.
-     */
-    xmlCleanupParser();
-    /*
-     * this is to debug memory for regression tests
-     */
-    xmlMemoryDump();
-    return(0);
+    cur = cur->xmlChildrenNode;
+    while (cur != NULL) {
+        if ((!xmlStrcmp(cur->name, (const xmlChar *)"reference"))) {
+            uri = xmlGetProp(cur, "uri");
+            printf("uri: %s\n", uri);
+            xmlFree(uri);
+        }
+        cur = cur->next;
+    }
+    xmlFreeDoc(doc);
+    return (1);
 }
-#else
-int main(void) {
-    fprintf(stderr, "XInclude support not compiled in\n");
-    exit(1);
-}
-#endif
