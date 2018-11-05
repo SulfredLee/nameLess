@@ -1,4 +1,4 @@
 #!/bin/bash
 dotFile=$1
 
-dot -Tpng $dotFile -o ${dotFile}.png
+dot -Tpdf $dotFile -o ${dotFile}.pdf
