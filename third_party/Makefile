@@ -13,8 +13,11 @@ apps+=ycmd
 apps+=spacemacs
 apps+=libjson
 apps+=protobuf
+apps+=libxml2
 
 all: apps
+
+libxml2: .libxml2
 
 boost: .boost
 
@@ -201,6 +204,15 @@ openssl: .openssl
 	cd protobuf; \
 	./autogen.sh; \
 	./configure --prefix=/usr/local/protobuf/3.6.0; \
+	make -j 8; \
+	sudo make install;
+	touch $@
+
+.libxml2:
+	wget ftp://xmlsoft.org/libxml2/libxml2-2.9.8.tar.gz
+	sudo mkdir -p /usr/local/libxml2/2.9.8
+	cd libxml2-2.9.8; \
+	./configure --prefix=/usr/local/libxml2/2.9.8; \
 	make -j 8; \
 	sudo make install;
 	touch $@
