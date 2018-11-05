@@ -97,6 +97,28 @@ endif()
 message(STATUS "Info - libpcap include path: ${libpcap_INCLUDE_DIR}")
 message(STATUS "Info - libpcap library path: ${libpcap_LIBRARY_DIR}")
 
+# Handle libxml2 libaries
+message(STATUS "Info - preparing for libxml2 -------------------------")
+if (UNIX)
+  set(libxml2_ROOT "/usr/local/libxml2/2.9.8/")
+else ()
+endif ()
+find_path(libxml2_INCLUDE_DIR libxml/parser.h
+  PATHS ${libxml2_ROOT}include/libxml2
+  DOC "Path where libxml2 includes can be found")
+find_library(xml2_LIBRARY NAMES xml2 PATH_SUFFIXES lib64 lib
+  PATHS ${libxml2_ROOT}lib
+  DOC "Path where the libxml2 library can be found")
+get_filename_component(libxml2_LIBRARY_DIR "${xml2_LIBRARY}" PATH)
+if ("${libxml2_LIBRARY_DIR}" STREQUAL "" OR "${libxml2_INCLUDE_DIR}" STREQUAL "")
+    message(FATAL_ERROR "Cannot find xml2 development resourse")
+    return()
+endif()
+set(libxml2_INCLUDE_DIR ${libxml2_ROOT}include/libxml2)
+set(libxml2_LIBRARY_DIR ${libxml2_ROOT}lib)
+message(STATUS "Info - libxml2 include path: ${libxml2_INCLUDE_DIR}")
+message(STATUS "Info - libxml2 library path: ${libxml2_LIBRARY_DIR}")
+
 # Handle jwt libaries
 message(STATUS "Info - preparing for jwt -------------------------")
 if (UNIX)
