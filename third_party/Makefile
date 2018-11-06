@@ -210,6 +210,7 @@ openssl: .openssl
 
 .libxml2:
 	wget ftp://xmlsoft.org/libxml2/libxml2-2.9.8.tar.gz
+	tar zxf libxml2-2.9.8.tar.gz
 	sudo mkdir -p /usr/local/libxml2/2.9.8
 	cd libxml2-2.9.8; \
 	./configure --prefix=/usr/local/libxml2/2.9.8; \
