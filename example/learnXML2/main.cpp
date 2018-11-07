@@ -6,10 +6,12 @@
 #include <list>
 #include <fstream>
 #include <algorithm>
+#include <sstream>
 
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
@@ -139,12 +141,20 @@ static void print_element_names(xmlNodePtr a_node)
                 unsigned char* decodedContent = NULL;
                 unsigned int len = 0;
                 base64_decode(content, &decodedContent, &len);
-                printf("content.size(): %lu len: %du\n", content.size(), len);
+                printf("content.size(): %lu len: %d\n", content.size(), len);
 
                 std::ofstream FH;
                 FH.open("image.png", std::ios::binary | std::ios::out);
                 FH.write((char*)decodedContent, len);
                 FH.close();
+
+                unsigned int width, height;
+                memcpy((char*)&width, decodedContent + 16, sizeof(unsigned int));
+                memcpy((char*)&height, decodedContent + 20, sizeof(unsigned int));
+
+                width = ntohl(width);
+                height = ntohl(height);
+                printf("width: %u, height: %u\n", width, height);
             }
             xmlChar* uri;
             uri = xmlGetProp(cur_node, (xmlChar*)"encodin");
@@ -166,6 +176,11 @@ static void print_element_names(xmlNodePtr a_node)
             xmlFree(uri);
             uri = xmlGetProp(cur_node, (xmlChar*)"extent");
             printf("uri: %s\n", uri);
+            std::string temp((char*)uri);
+            temp.erase(std::remove(temp.begin(), temp.end(), '%'), temp.end());
+            int extent_x, extent_y;
+            sscanf(temp.c_str(), "%d %d", &extent_x, &extent_y);
+            printf("extent_x: %d extent_y: %d\n", extent_x, extent_y);
             xmlFree(uri);
             uri = xmlGetProp(cur_node, (xmlChar*)"origin");
             printf("uri: %s\n", uri);
@@ -187,9 +202,6 @@ static void print_element_names(xmlNodePtr a_node)
             uri = xmlGetProp(cur_node, (xmlChar*)"backgroundImage");
             printf("uri: %s\n", uri);
             xmlFree(uri);
-            uri = xmlGetProp(cur_node, (xmlChar*)"id");
-            printf("uri: %s\n", uri);
-            xmlFree(uri);
         }
 
         print_element_names(cur_node->children);
@@ -198,7 +210,11 @@ static void print_element_names(xmlNodePtr a_node)
 
 int main(int argc, char **argv)
 {
+    std::stringstream ss;
+    ss << "/tmp/image.png";
+    std::string temp = ss.str();
 
+    printf("testing %s\n", temp.c_str());
     char         *docname;
     xmlDocPtr    doc;
     xmlNodePtr   cur;
