@@ -14,8 +14,11 @@ apps+=spacemacs
 apps+=libjson
 apps+=protobuf
 apps+=libxml2
+apps+=libpng
 
 all: apps
+
+libpng: .libpng
 
 libxml2: .libxml2
 
@@ -214,6 +217,15 @@ openssl: .openssl
 	sudo mkdir -p /usr/local/libxml2/2.9.8
 	cd libxml2-2.9.8; \
 	./configure --prefix=/usr/local/libxml2/2.9.8; \
+	make -j 8; \
+	sudo make install;
+	touch $@
+
+.libpng:
+	tar zxf libpng-1.6.35.tar.gz
+	sudo mkdir -p /usr/local/libpng/1.6.35
+	cd libpng-1.6.35; \
+	./configure --prefix=/usr/local/libpng/1.6.35; \
 	make -j 8; \
 	sudo make install;
 	touch $@
