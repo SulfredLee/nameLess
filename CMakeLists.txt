@@ -97,6 +97,17 @@ endif()
 message(STATUS "Info - libpcap include path: ${libpcap_INCLUDE_DIR}")
 message(STATUS "Info - libpcap library path: ${libpcap_LIBRARY_DIR}")
 
+# Handle libbmp libaries
+message(STATUS "Info - preparing for libbmp -------------------------")
+if (UNIX)
+  set(libbmp_ROOT "/usr/local/libbmp/0.1.3/")
+else ()
+endif ()
+set(libbmp_INCLUDE_DIR ${libbmp_ROOT}include)
+set(libbmp_LIBRARY_DIR ${libbmp_ROOT}lib)
+message(STATUS "Info - libbmp include path: ${libbmp_INCLUDE_DIR}")
+message(STATUS "Info - libbmp library path: ${libbmp_LIBRARY_DIR}")
+
 # Handle libpng libaries
 message(STATUS "Info - preparing for libpng -------------------------")
 if (UNIX)

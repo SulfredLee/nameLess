@@ -15,8 +15,11 @@ apps+=libjson
 apps+=protobuf
 apps+=libxml2
 apps+=libpng
+apps+=libbmp
 
 all: apps
+
+libbmp: .libbmp
 
 libpng: .libpng
 
@@ -226,6 +229,15 @@ openssl: .openssl
 	sudo mkdir -p /usr/local/libpng/1.6.35
 	cd libpng-1.6.35; \
 	./configure --prefix=/usr/local/libpng/1.6.35; \
+	make -j 8; \
+	sudo make install;
+	touch $@
+
+.libbmp:
+	tar zxf libbmp-0.1.3.tar.gz
+	sudo mkdir -p /usr/local/libbmp/0.1.3
+	cd libbmp-0.1.3; \
+	./configure --prefix=/usr/local/libbmp/0.1.3; \
 	make -j 8; \
 	sudo make install;
 	touch $@
