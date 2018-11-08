@@ -97,6 +97,17 @@ endif()
 message(STATUS "Info - libpcap include path: ${libpcap_INCLUDE_DIR}")
 message(STATUS "Info - libpcap library path: ${libpcap_LIBRARY_DIR}")
 
+# Handle libpng libaries
+message(STATUS "Info - preparing for libpng -------------------------")
+if (UNIX)
+  set(libpng_ROOT "/usr/local/libpng/1.6.35/")
+else ()
+endif ()
+set(libpng_INCLUDE_DIR ${libpng_ROOT}include)
+set(libpng_LIBRARY_DIR ${libpng_ROOT}lib)
+message(STATUS "Info - libpng include path: ${libpng_INCLUDE_DIR}")
+message(STATUS "Info - libpng library path: ${libpng_LIBRARY_DIR}")
+
 # Handle libxml2 libaries
 message(STATUS "Info - preparing for libxml2 -------------------------")
 if (UNIX)
