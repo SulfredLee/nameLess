@@ -67,8 +67,8 @@ PNG2BMP::PNG2BMP()
 PNG2BMP::~PNG2BMP()
 {
     for (int y = 0; y < m_height; y++)
-        free(m_rowPointers[y]);
-    free(m_rowPointers);
+        delete[] m_rowPointers[y];
+    delete[] m_rowPointers;
 }
 
 bool PNG2BMP::Convert(const std::string& pngFile, const std::string& bmpFile)
@@ -195,9 +195,9 @@ bool PNG2BMP::ReadPNGFromFile(const std::string& pngFile)
         return false;
     }
 
-    m_rowPointers = (png_bytep*) malloc(sizeof(png_bytep) * m_height);
+    m_rowPointers = (png_bytep*) new png_byte[(sizeof(png_bytep) * m_height)];
     for (int y = 0; y < m_height; y++)
-        m_rowPointers[y] = (png_byte*) malloc(png_get_rowbytes(m_pngPtr, m_infoPtr));
+        m_rowPointers[y] = (png_byte*) new png_byte[(png_get_rowbytes(m_pngPtr, m_infoPtr))];
 
     png_read_image(m_pngPtr, m_rowPointers);
 
@@ -289,9 +289,9 @@ bool PNG2BMP::ReadPNGFromMemory(const std::vector<unsigned char>& pngImage)
         return false;
     }
 
-    m_rowPointers = (png_bytep*) malloc(sizeof(png_bytep) * m_height);
+    m_rowPointers = (png_bytep*) new png_byte[(sizeof(png_bytep) * m_height)];
     for (int y = 0; y < m_height; y++)
-        m_rowPointers[y] = (png_byte*) malloc(png_get_rowbytes(m_pngPtr, m_infoPtr));
+        m_rowPointers[y] = (png_byte*) new png_byte[(png_get_rowbytes(m_pngPtr, m_infoPtr))];
 
     png_read_image(m_pngPtr, m_rowPointers);
 
