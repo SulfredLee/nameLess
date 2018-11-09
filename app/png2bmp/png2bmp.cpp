@@ -8,20 +8,23 @@ static void ReadDataFromInputStream(png_structp png_ptr, png_bytep data, size_t 
 
 PNGInputStream::PNGInputStream()
 {
+    m_nextByte = 0;
 }
 
 PNGInputStream::~PNGInputStream()
 {
 }
 
-bool PNGInputStream::AddImageData(const std::vector<unsigned char>& imageData)
+bool PNGInputStream::AddImageData(const std::vector<unsigned char>& imageData, size_t signatureLen)
 {
     m_imageData.clear();
     m_imageData = imageData;
+    if (signatureLen <= 8) // we add this handling based on libpng 1.6.35
+        m_nextByte = signatureLen;
     return true;
 }
 
-bool PNGInputStream::AddImageData(const std::string& imageFile)
+bool PNGInputStream::AddImageData(const std::string& imageFile, size_t signatureLen)
 {
     // Reading size of file
     FILE * file = fopen(imageFile.c_str(), "rb");
@@ -37,17 +40,24 @@ bool PNGInputStream::AddImageData(const std::string& imageFile)
 
     if (bytes_read != size) return false;
 
+    if (signatureLen <= 8) // we add this handling based on libpng 1.6.35
+        m_nextByte = signatureLen;
     return true;
 }
 
-unsigned char* PNGInputStream::GetData()
+size_t PNGInputStream::Read(png_bytep data, size_t length)
 {
-    return &(m_imageData[0]);
-}
-
-size_t PNGInputStream::GetDataLen()
-{
-    return m_imageData.size();
+    if (length + m_nextByte < m_imageData.size())
+    {
+        memcpy(data, (char*)&(m_imageData[m_nextByte]), length);
+        m_nextByte += length;
+        return length;
+    }
+    else
+    {
+        fprintf(stderr, "[%s:%d] request data is too long: %lu, we only have: %lu", __func__, __LINE__, length + m_nextByte, m_imageData.size());
+        return 0;
+    }
 }
 
 PNG2BMP::PNG2BMP()
@@ -81,16 +91,24 @@ bool PNG2BMP::Convert(const std::string& pngFile, const std::string& bmpFile)
 
 bool PNG2BMP::Convert(const std::vector<unsigned char>& pngImage, const std::string& bmpFile)
 {
-    if (!ReadPNGFromMemory(pngImage))
-    {
-        fprintf(stderr, "[%s:%d] Fail ReadPNGFromMemory\n", __func__, __LINE__);
-        return false;
-    }
+    std::vector<unsigned char> bmpImage;
+    Convert(pngImage, bmpImage);
 
     m_bmp = bmp_create(m_width, m_height, 32);
-
-    ProcessFile();
-
+    // copy data to bmp structure
+    for (int y = 0; y < m_height; y++)
+    {
+        for (int x = 0; x < m_width; x++)
+        {
+            int z = (y * m_width * 4) + (x * 4);
+            rgb_pixel_t pixel;
+            pixel.red = bmpImage[z];
+            pixel.green = bmpImage[z + 1];
+            pixel.blue = bmpImage[z + 2];
+            pixel.alpha = bmpImage[z + 3];
+            bmp_set_pixel(m_bmp, x, y, pixel);
+        }
+    }
     bmp_save(m_bmp, bmpFile.c_str());
     bmp_destroy(m_bmp);
 
@@ -99,6 +117,13 @@ bool PNG2BMP::Convert(const std::vector<unsigned char>& pngImage, const std::str
 
 bool PNG2BMP::Convert(const std::vector<unsigned char>& pngImage, std::vector<unsigned char>& bmpImage)
 {
+    if (!ReadPNGFromMemory(pngImage))
+    {
+        fprintf(stderr, "[%s:%d] Fail ReadPNGFromMemory\n", __func__, __LINE__);
+        return false;
+    }
+
+    PNG2BMPMemory(bmpImage);
     return true;
 }
 
@@ -215,7 +240,7 @@ bool PNG2BMP::ProcessFile()
 bool PNG2BMP::ReadPNGFromMemory(const std::vector<unsigned char>& pngImage)
 {
     PNGInputStream inputStream;
-    inputStream.AddImageData(pngImage);
+    inputStream.AddImageData(pngImage, 8);
     png_byte header[8]; // 8 is the maximum size that can be checked
 
     memcpy((char*)&(header[0]), (char*)&(pngImage[0]), 8);
@@ -281,13 +306,51 @@ void ReadDataFromInputStream(png_structp png_ptr, png_bytep data, size_t length)
     if (io_ptr != NULL)
     {
         PNGInputStream& inputStream = *(PNGInputStream*)io_ptr;
-        if (length <= inputStream.GetDataLen())
+        size_t check = inputStream.Read(data, length);
+        if (check != length)
         {
-            memcpy((char*)data, inputStream.GetData(), length);
-        }
-        else
-        {
-            fprintf(stderr, "[%s:%d] Length miss match, pngLen: %lu, inpug image length: %lu\n", __func__, __LINE__, length, inputStream.GetDataLen());
+            fprintf(stderr, "[%s:%d] Length miss match, return: %lu, request: %lu\n", __func__, __LINE__, check, length);
         }
     }
+}
+
+void PNG2BMP::PNG2BMPMemory(std::vector<unsigned char>& bmpImage)
+{
+    bmpImage.clear();
+    bmpImage.resize(m_width * m_height * 4);
+
+    for (int y = 0; y < m_height; y++)
+    {
+        png_byte* row = m_rowPointers[y];
+        for (int x = 0; x < m_width; x++)
+        {
+            int z = (y * m_width * 4) + (x * 4);
+            if (m_colorType == PNG_COLOR_TYPE_RGB_ALPHA)
+            {
+                png_byte* ptr = &(row[x * 4]);
+                bmpImage[z] = ptr[0]; // red
+                bmpImage[z + 1] = ptr[1]; // green
+                bmpImage[z + 2] = ptr[2]; // blue
+                bmpImage[z + 3] = ptr[3]; // alpha
+            }
+            else if (m_colorType == PNG_COLOR_TYPE_RGB)
+            {
+                png_byte* ptr = &(row[x * 3]);
+                bmpImage[z] = ptr[0]; // red
+                bmpImage[z + 1] = ptr[1]; // green
+                bmpImage[z + 2] = ptr[2]; // blue
+                bmpImage[z + 3] = 255; // alpha
+            }
+        }
+    }
+}
+
+void PNG2BMP::PrintRGBPixel(const rgb_pixel_t& pixel)
+{
+    fprintf(stderr, "[%s:%d] sulfred debug red: %X green: %X blue: %X alpha: %X\n", __func__, __LINE__, pixel.red, pixel.green, pixel.blue, pixel.alpha);
+}
+
+void PNG2BMP::PrintPNGPixel(png_byte const * const pixel)
+{
+    fprintf(stderr, "[%s:%d] sulfred debug red: %X green: %X blue: %X alpha: %X\n", __func__, __LINE__, pixel[0], pixel[1], pixel[2], pixel[3]);
 }

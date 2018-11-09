@@ -12,12 +12,12 @@ class PNGInputStream
     PNGInputStream();
     ~PNGInputStream();
 
-    bool AddImageData(const std::vector<unsigned char>& imageData);
-    bool AddImageData(const std::string& imageFile);
-    unsigned char* GetData();
-    size_t GetDataLen();
+    bool AddImageData(const std::vector<unsigned char>& imageData, size_t signatureLen);
+    bool AddImageData(const std::string& imageFile, size_t signatureLen);
+    size_t Read(png_bytep data, size_t length);
  private:
     std::vector<unsigned char> m_imageData;
+    size_t m_nextByte;
 };
 
 class PNG2BMP
@@ -33,6 +33,9 @@ class PNG2BMP
     bool ReadPNGFromFile(const std::string& pngFile);
     bool ReadPNGFromMemory(const std::vector<unsigned char>& pngImage);
     bool ProcessFile();
+    void PNG2BMPMemory(std::vector<unsigned char>& bmpImage);
+    void PrintRGBPixel(const rgb_pixel_t& pixel);
+    void PrintPNGPixel(png_byte const * const pixel);
 
  private:
     int m_width;
