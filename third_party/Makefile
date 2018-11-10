@@ -16,8 +16,11 @@ apps+=protobuf
 apps+=libxml2
 apps+=libpng
 apps+=libbmp
+apps+=ninja
 
 all: apps
+
+ninja: .ninja
 
 libbmp: .libbmp
 
@@ -241,3 +244,9 @@ openssl: .openssl
 	make -j 8; \
 	sudo make install;
 	touch $@
+
+.ninja:
+	git clone https://github.com/ninja-build/ninja.git
+	cd ninja; \
+	./configure.py --bootstrap; \
+	sudo cp ninja /usr/bin;
