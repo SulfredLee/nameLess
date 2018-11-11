@@ -17,8 +17,11 @@ apps+=libxml2
 apps+=libpng
 apps+=libbmp
 apps+=ninja
+apps+=apt-file
 
 all: apps
+
+apt-file: .apt-file
 
 ninja: .ninja
 
@@ -250,3 +253,8 @@ openssl: .openssl
 	cd ninja; \
 	./configure.py --bootstrap; \
 	sudo cp ninja /usr/bin;
+
+# usage: after update, you can search your file by apt-file search "gl.h"
+.apt-file:
+	sudo apt-get install apt-file
+	apt-file update
