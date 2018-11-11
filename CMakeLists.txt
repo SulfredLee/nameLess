@@ -103,6 +103,12 @@ if (UNIX)
   set(libbmp_ROOT "/usr/local/libbmp/0.1.3/")
 else ()
 endif ()
+find_path(libbmp_INCLUDE_DIR bmpfile.h
+  PATHS ${libbmp_ROOT}include
+  DOC "Path where bmp includes can be found")
+find_library(bmp_LIBRARY NAMES bmp PATH_SUFFIXES lib64 lib
+  PATHS ${libbmp_ROOT}lib
+  DOC "Path where the bmp library can be found")
 set(libbmp_INCLUDE_DIR ${libbmp_ROOT}include)
 set(libbmp_LIBRARY_DIR ${libbmp_ROOT}lib)
 message(STATUS "Info - libbmp include path: ${libbmp_INCLUDE_DIR}")
@@ -114,6 +120,12 @@ if (UNIX)
   set(libpng_ROOT "/usr/local/libpng/1.6.35/")
 else ()
 endif ()
+find_path(libpng_INCLUDE_DIR png.h
+  PATHS ${libpng_ROOT}include
+  DOC "Path where png includes can be found")
+find_library(png_LIBRARY NAMES png PATH_SUFFIXES lib64 lib
+  PATHS ${libpng_ROOT}lib
+  DOC "Path where the png library can be found")
 set(libpng_INCLUDE_DIR ${libpng_ROOT}include)
 set(libpng_LIBRARY_DIR ${libpng_ROOT}lib)
 message(STATUS "Info - libpng include path: ${libpng_INCLUDE_DIR}")

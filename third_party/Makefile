@@ -21,6 +21,8 @@ apps+=apt-file
 
 all: apps
 
+libpcap: .libpcap
+
 apt-file: .apt-file
 
 ninja: .ninja
@@ -160,6 +162,8 @@ openssl: .openssl
 	touch $@
 
 .libpcap:
+	sudo apt-get install flex bison
+	wget http://www.tcpdump.org/release/libpcap-1.8.1.tar.gz
 	tar zxf libpcap-1.8.1.tar.gz
 	sudo mkdir -p /usr/local/libpcap/1.8.1
 	cd libpcap-1.8.1; \
