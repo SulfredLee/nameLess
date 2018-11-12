@@ -19,3 +19,14 @@ std::vector<std::string> Utility::splitString(const std::string& s, const char d
     }
     return elems;
 }
+
+bool Utility::is_big_endian()
+{
+    union
+    {
+        uint32_t i;
+        char c[4];
+    } bint = {0x01020304};
+
+    return bint.c[0] == 1;
+}
