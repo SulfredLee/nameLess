@@ -166,7 +166,7 @@ static void print_element_names(xmlNodePtr a_node)
                 printf("width: %u, height: %u\n", width, height);
             }
             xmlChar* uri;
-            uri = xmlGetProp(cur_node, (xmlChar*)"encodin");
+            uri = xmlGetProp(cur_node, (xmlChar*)"encoding");
             printf("uri: %s\n", uri == NULL ? "NULLLLLL" : (char*)uri);
             xmlFree(uri);
             uri = xmlGetProp(cur_node, (xmlChar*)"imagetype");
