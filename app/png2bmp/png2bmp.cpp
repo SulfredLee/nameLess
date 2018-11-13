@@ -5,6 +5,8 @@
 
 // private
 static void ReadDataFromInputStream(png_structp png_ptr, png_bytep data, size_t length);
+static void PNGErrorFn(png_structp png_ptr, png_const_charp error_msg);
+static void PNGWarningFn(png_structp png_ptr, png_const_charp warning_msg);
 
 PNGInputStream::PNGInputStream()
 {
@@ -253,6 +255,14 @@ bool PNG2BMP::ReadPNGFromMemory(const std::vector<unsigned char>& pngImage)
         return false;
     }
 
+    // png_voidp error_ptr = png_get_error_ptr(png_ptr);
+    // if (!error_ptr)
+    // {
+    //     fprintf(stderr, "[%s:%d] png_get_error_ptr failed\n", __func__, __LINE__);
+    //     return false;
+    // }
+    // png_set_error_fn(m_pngPtr, error_ptr, PNGErrorFn, PNGWarningFn);
+
     m_infoPtr = png_create_info_struct(m_pngPtr);
     if (!m_infoPtr)
     {
@@ -347,4 +357,14 @@ void PNG2BMP::PrintRGBPixel(const rgb_pixel_t& pixel)
 void PNG2BMP::PrintPNGPixel(png_byte const * const pixel)
 {
     fprintf(stderr, "[%s:%d] sulfred debug red: %X green: %X blue: %X alpha: %X\n", __func__, __LINE__, pixel[0], pixel[1], pixel[2], pixel[3]);
+}
+
+void PNGErrorFn(png_structp png_ptr, png_const_charp error_msg)
+{
+    fprintf(stderr, "[%s:%d] sulfred debug\n", __func__, __LINE__);
+}
+
+void PNGWarningFn(png_structp png_ptr, png_const_charp warning_msg)
+{
+    fprintf(stderr, "[%s:%d] sulfred debug\n", __func__, __LINE__);
 }
