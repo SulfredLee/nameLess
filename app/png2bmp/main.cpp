@@ -24,5 +24,7 @@ int main(int argc, char* argv[])
     PNG2BMP converter;
     // converter.Convert(argv[1], argv[2]);
     converter.Convert(pngImage, argv[2]);
+
+    std::cout << "End of program" << std::endl;
     return 0;
 }

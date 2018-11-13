@@ -69,6 +69,7 @@ PNG2BMP::~PNG2BMP()
     for (int y = 0; y < m_height; y++)
         delete[] m_rowPointers[y];
     delete[] m_rowPointers;
+    png_destroy_read_struct(&m_pngPtr, &m_infoPtr, NULL);
 }
 
 bool PNG2BMP::Convert(const std::string& pngFile, const std::string& bmpFile)
@@ -169,6 +170,7 @@ bool PNG2BMP::ReadPNGFromFile(const std::string& pngFile)
 
     if (setjmp(png_jmpbuf(m_pngPtr)))
     {
+        png_destroy_read_struct(&m_pngPtr, &m_infoPtr, NULL);
         fprintf(stderr, "[%s:%d] Error during init_io\n", __func__, __LINE__);
         return false;
     }
@@ -186,14 +188,6 @@ bool PNG2BMP::ReadPNGFromFile(const std::string& pngFile)
 
     m_numberOfPasses = png_set_interlace_handling(m_pngPtr);
     png_read_update_info(m_pngPtr, m_infoPtr);
-
-
-    /* read file */
-    if (setjmp(png_jmpbuf(m_pngPtr)))
-    {
-        fprintf(stderr, "[%s:%d] Error during read_image\n", __func__, __LINE__);
-        return false;
-    }
 
     m_rowPointers = (png_bytep*) new png_byte[(sizeof(png_bytep) * m_height)];
     for (int y = 0; y < m_height; y++)
@@ -253,7 +247,6 @@ bool PNG2BMP::ReadPNGFromMemory(const std::vector<unsigned char>& pngImage)
 
     /* initialize stuff */
     m_pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-
     if (!m_pngPtr)
     {
         fprintf(stderr, "[%s:%d] png_create_read_struct failed\n", __func__, __LINE__);
@@ -264,6 +257,14 @@ bool PNG2BMP::ReadPNGFromMemory(const std::vector<unsigned char>& pngImage)
     if (!m_infoPtr)
     {
         fprintf(stderr, "[%s:%d] png_create_read_struct failed\n", __func__, __LINE__);
+        return false;
+    }
+
+    /* read file */
+    if (setjmp(png_jmpbuf(m_pngPtr)))
+    {
+        png_destroy_read_struct(&m_pngPtr, &m_infoPtr, NULL);
+        fprintf(stderr, "[%s:%d] Error during read_image\n", __func__, __LINE__);
         return false;
     }
 
@@ -281,13 +282,6 @@ bool PNG2BMP::ReadPNGFromMemory(const std::vector<unsigned char>& pngImage)
     m_numberOfPasses = png_set_interlace_handling(m_pngPtr);
     png_read_update_info(m_pngPtr, m_infoPtr);
 
-
-    /* read file */
-    if (setjmp(png_jmpbuf(m_pngPtr)))
-    {
-        fprintf(stderr, "[%s:%d] Error during read_image\n", __func__, __LINE__);
-        return false;
-    }
 
     m_rowPointers = (png_bytep*) new png_byte[(sizeof(png_bytep) * m_height)];
     for (int y = 0; y < m_height; y++)
