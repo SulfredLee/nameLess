@@ -117,6 +117,15 @@ std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_
 
 }
 
+static void GetMsec(unsigned long long& outMsec, char* uri)
+{
+    unsigned long long hour, min, sec, msec;
+    sscanf(uri, "%llu:%llu:%llu.%llu", &hour, &min, &sec, &msec);
+    outMsec = (hour * 3600 + min * 60 + sec) * 1000 + msec;
+
+    printf("hour: %llu min: %llu sec: %llu msec: %llu\n", hour, min, sec, msec);
+    printf("outMsec: %llu\n", outMsec);
+}
 /**
  * print_element_names:
  * @a_node: the initial xml node to consider.
@@ -192,9 +201,13 @@ static void print_element_names(xmlNodePtr a_node)
             xmlChar* uri;
             uri = xmlGetProp(cur_node, (xmlChar*)"begin");
             printf("uri: %s\n", uri);
+            unsigned long long beginMsec;
+            GetMsec(beginMsec, (char*)uri);
             xmlFree(uri);
             uri = xmlGetProp(cur_node, (xmlChar*)"end");
             printf("uri: %s\n", uri);
+            unsigned long long endMsec;
+            GetMsec(endMsec, (char*)uri);
             xmlFree(uri);
             uri = xmlGetProp(cur_node, (xmlChar*)"region");
             printf("uri: %s\n", uri);
