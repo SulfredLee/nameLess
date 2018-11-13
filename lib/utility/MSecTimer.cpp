@@ -17,7 +17,7 @@ void MSecTimer::Stop(){
 
 void MSecTimer::Main(){
     int sleepDurationMSec = m_unDuration * 1000;
-	clock_t begin_time = clock();
+    // clock_t begin_time = clock();
     while (!m_bTimerThreadExit)
     {
         usleep(sleepDurationMSec);

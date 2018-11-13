@@ -47,6 +47,11 @@ int Utility::ReadFileToArray(const std::string& fileName, std::vector<unsigned c
     data.resize(size);
     int bytes_read = fread(&(data[0]), sizeof(unsigned char), size, file);
     fclose(file);
+    if (bytes_read != size)
+    {
+        data.clear();
+        return 0;
+    }
 
     return 1;
 }
