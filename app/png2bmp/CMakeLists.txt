@@ -11,12 +11,14 @@ file(GLOB ${folderName}_src
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/lib/utility
   ${libpng_INCLUDE_DIR}
   ${libbmp_INCLUDE_DIR})
 
 add_executable(${targetName} ${${folderName}_src})
 
 target_link_libraries(${targetName}
+  utility
   ${libpng_LIBRARY_DIR}/libpng16.so
   ${libbmp_LIBRARY_DIR}/libbmp.so)
 
