@@ -69,8 +69,12 @@ PNG2BMP::PNG2BMP()
 PNG2BMP::~PNG2BMP()
 {
     for (int y = 0; y < m_height; y++)
-        delete[] m_rowPointers[y];
-    delete[] m_rowPointers;
+    {
+        if (m_rowPointers[y])
+            delete[] m_rowPointers[y];
+    }
+    if (m_rowPointers)
+        delete[] m_rowPointers;
     png_destroy_read_struct(&m_pngPtr, &m_infoPtr, NULL);
 }
 
