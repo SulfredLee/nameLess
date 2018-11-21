@@ -176,6 +176,13 @@ static void print_element_names(xmlNodePtr a_node)
             printf("uri: %s\n", uri);
             xmlFree(uri);
         }
+        else if (cur_node->type == XML_ELEMENT_NODE && xmlStrcmp(cur_node->name, (xmlChar *)"tt") == 0)
+        {
+            printf("node type: Element, name: %s\n", cur_node->name);
+            xmlChar* uri;
+            uri = xmlGetProp(cur_node, (xmlChar*)"extent");
+            printf("uri: %s\n", uri);
+        }
         else if (cur_node->type == XML_ELEMENT_NODE && xmlStrcmp(cur_node->name, (xmlChar *)"region") == 0)
         {
             printf("node type: Element, name: %s\n", cur_node->name);
