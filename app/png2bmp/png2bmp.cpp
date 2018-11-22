@@ -64,6 +64,7 @@ size_t PNGInputStream::Read(png_bytep data, size_t length)
 
 PNG2BMP::PNG2BMP()
 {
+    m_rowPointers = NULL;
 }
 
 PNG2BMP::~PNG2BMP()
