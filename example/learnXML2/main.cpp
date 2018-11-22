@@ -223,6 +223,27 @@ static void print_element_names(xmlNodePtr a_node)
             printf("uri: %s\n", uri);
             xmlFree(uri);
         }
+        else if (cur_node->type == XML_ELEMENT_NODE && xmlStrcmp(cur_node->name, (xmlChar *)"p") == 0)
+        {
+            printf("node type: Element, name: %s\n", cur_node->name);
+            xmlChar* uri;
+            uri = xmlGetProp(cur_node, (xmlChar*)"begin");
+            printf("uri: %s\n", uri);
+            unsigned long long beginMsec;
+            GetMsec(beginMsec, (char*)uri);
+            xmlFree(uri);
+            uri = xmlGetProp(cur_node, (xmlChar*)"end");
+            printf("uri: %s\n", uri);
+            unsigned long long endMsec;
+            GetMsec(endMsec, (char*)uri);
+            xmlFree(uri);
+            uri = xmlGetProp(cur_node, (xmlChar*)"region");
+            printf("uri: %s\n", uri);
+            xmlFree(uri);
+            uri = xmlGetProp(cur_node, (xmlChar*)"backgroundImage");
+            printf("uri: %s\n", uri);
+            xmlFree(uri);
+        }
 
         print_element_names(cur_node->children);
     }
