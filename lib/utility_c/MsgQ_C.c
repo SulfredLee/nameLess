@@ -23,6 +23,7 @@ MsgQ_C* createMsgQ_C()
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
     pthread_mutex_init(&(pQueue->headMutex), &attr);
     pthread_mutex_init(&(pQueue->tailMutex), &attr);
+    pthread_cond_init(&(pQueue->cond), NULL);
     return pQueue;
 }
 
@@ -31,6 +32,7 @@ void freeMsgQ_C(MsgQ_C* inQueue)
     free(inQueue->pData);
     pthread_mutex_destroy(&(inQueue->headMutex));
     pthread_mutex_destroy(&(inQueue->tailMutex));
+    pthread_cond_destroy(&(inQueue->cond));
     inQueue = NULL;
 }
 
