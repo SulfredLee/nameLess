@@ -19,8 +19,11 @@ apps+=libbmp
 apps+=ninja
 apps+=apt-file
 apps+=libcurl
+apps+=libdash
 
 all: apps
+
+libdash: .libdash
 
 libcurl: .libcurl
 
@@ -275,3 +278,19 @@ openssl: .openssl
 	make -j 8; \
 	sudo make install;
 	touch $@
+
+.libdash:
+	sudo apt-get install libxml2-dev libcurl4-openssl-dev
+	git clone https://github.com/bitmovin/libdash.git
+	sudo mkdir -p /usr/local/libdash/master/bin
+	sudo mkdir -p /usr/local/libdash/master/include
+	sudo mkdir -p /usr/local/libdash/master/lib
+	cd libdash/libdash; \
+	mkdir build; \
+	cd build; \
+	cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/libdash/master; \
+	ninja;
+	cd libdash/libdash; \
+	sudo cp libdash/include/* /usr/local/libdash/master/include; \
+	sudo cp build/bin/libdash_networkpart_test /usr/local/libdash/master/bin; \
+	sudo cp build/bin/libdash.so /usr/local/libdash/master/lib;
