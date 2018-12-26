@@ -33,4 +33,6 @@ echo "-I/usr/local/libpng/1.6.35/include" >> $OutputPath/.clang_complete
 
 echo "-I/usr/local/libcurl/7.63.0/include" >> $OutputPath/.clang_complete
 
+echo "-I/usr/local/libdash/master/include" >> $OutputPath/.clang_complete
+
 find "/usr/include/c++/5" -type f -name "*.h" -o -name "*.hpp" | sed -r 's|/[^/]+$||' | sort | uniq | awk '{printf "-I%s\n", $1}' >> $OutputPath/.clang_complete
