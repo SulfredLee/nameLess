@@ -18,8 +18,11 @@ apps+=libpng
 apps+=libbmp
 apps+=ninja
 apps+=apt-file
+apps+=libcurl
 
 all: apps
+
+libcurl: .libcurl
 
 libpcap: .libpcap
 
@@ -262,3 +265,13 @@ openssl: .openssl
 .apt-file:
 	sudo apt-get install apt-file
 	apt-file update
+
+.libcurl:
+	wget https://curl.haxx.se/download/curl-7.63.0.tar.gz
+	sudo mkdir -p /usr/local/libcurl/7.63.0
+	tar zxf curl-7.63.0.tar.gz
+	cd curl-7.63.0; \
+	./configure --prefix=/usr/local/libcurl/7.63.0; \
+	make -j 8; \
+	sudo make install;
+	touch $@

@@ -211,6 +211,25 @@ endif()
 message(STATUS "Info - libprotobuf include path: ${libprotobuf_INCLUDE_DIR}")
 message(STATUS "Info - libprotobuf library path: ${libprotobuf_LIBRARY_DIR}")
 
+# Handle curl libaries
+message(STATUS "Info - preparing for libcurl -------------------------")
+if (UNIX)
+  set(libcurl_ROOT "/usr/local/libcurl/7.63.0/")
+  set(libcurl_INCLUDE_DIR ${libcurl_ROOT}include)
+  set(libcurl_LIBRARY_DIR ${libcurl_ROOT}lib)
+else ()
+endif ()
+if (NOT EXISTS "${libcurl_INCLUDE_DIR}/curl/curl.h")
+  message(FATAL_ERROR "Error - ${libcurl_INCLUDE_DIR}/curl/curl.h not found")
+  return()
+endif()
+if (NOT EXISTS "${libcurl_LIBRARY_DIR}/libcurl.a")
+  message(FATAL_ERROR "Error - ${libcurl_LIBRARY_DIR}/libcurl.a not found")
+  return()
+endif()
+message(STATUS "Info - libcurl include path: ${libcurl_INCLUDE_DIR}")
+message(STATUS "Info - libcurl library path: ${libcurl_LIBRARY_DIR}")
+
 # Sub-directories where more CMakeLists.txt exist
 # libraries
 add_subdirectory(lib)
