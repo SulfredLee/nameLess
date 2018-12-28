@@ -230,6 +230,25 @@ endif()
 message(STATUS "Info - libcurl include path: ${libcurl_INCLUDE_DIR}")
 message(STATUS "Info - libcurl library path: ${libcurl_LIBRARY_DIR}")
 
+# Handle dash libaries
+message(STATUS "Info - preparing for libdash -------------------------")
+if (UNIX)
+  set(libdash_ROOT "/usr/local/libdash/master/")
+  set(libdash_INCLUDE_DIR ${libdash_ROOT}include)
+  set(libdash_LIBRARY_DIR ${libdash_ROOT}lib)
+else ()
+endif ()
+if (NOT EXISTS "${libdash_INCLUDE_DIR}/IMPD.h")
+  message(FATAL_ERROR "Error - ${libdash_INCLUDE_DIR}/IMPD.h not found")
+  return()
+endif()
+if (NOT EXISTS "${libdash_LIBRARY_DIR}/libdash.so")
+  message(FATAL_ERROR "Error - ${libdash_LIBRARY_DIR}/libdash.so not found")
+  return()
+endif()
+message(STATUS "Info - libdash include path: ${libdash_INCLUDE_DIR}")
+message(STATUS "Info - libdash library path: ${libdash_LIBRARY_DIR}")
+
 # Sub-directories where more CMakeLists.txt exist
 # libraries
 add_subdirectory(lib)
