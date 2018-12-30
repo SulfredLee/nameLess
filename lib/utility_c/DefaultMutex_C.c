@@ -15,6 +15,7 @@ DefaultMutex_C* createDefaultMutex_C()
     DefaultMutex_C* pMutex = (DefaultMutex_C*)malloc(sizeof(DefaultMutex_C));
     memset(pMutex, 0, sizeof(DefaultMutex_C));
 
+    pthread_mutexattr_init(&(pMutex->m_Attr));
     pthread_mutexattr_settype(&(pMutex->m_Attr), PTHREAD_MUTEX_DEFAULT);
     pthread_mutex_init(&(pMutex->m_Mutex), &(pMutex->m_Attr));
 
