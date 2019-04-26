@@ -53,7 +53,7 @@ emacs: .emacs
 
 ycmd: .ycmd
 
-spacemacs: global cscope emacs ycmd .spacemacs
+spacemacs: global cscope emacs .spacemacs
 
 global: .global
 

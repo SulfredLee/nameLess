@@ -41,7 +41,9 @@ values."
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      helm
-     auto-completion
+     (auto-completion :variables
+                      auto-completion-enable-sort-by-usage t
+                      auto-completion-enable-snippets-in-popup t)
      ;; better-defaults
      emacs-lisp
      javascript
@@ -329,10 +331,10 @@ you should place your code here."
   ;; (spacemacs/toggle-whitespace-globally-on)
   (setq neo-theme 'nerd)
   (setq scroll-margin 12)
-  (add-hook 'c++-mode-hook 'ycmd-mode)
-  (setq ycmd-server-command '("python" "/home/sulfred/Downloads/SoftwareInstall/ycmd/ycmd"))
-  (setq ycmd-force-semantic-completion t)
-  (setq company-ycmd-request-sync-timeout 0)
+  ;; (add-hook 'c++-mode-hook 'ycmd-mode)
+  ;; (setq ycmd-server-command '("python" "/home/sulfred/Downloads/SoftwareInstall/ycmd/ycmd"))
+  ;; (setq ycmd-force-semantic-completion t)
+  ;; (setq company-ycmd-request-sync-timeout 0)
   (setq x-select-enable-clipboard t)
   (setq read-file-name-completion-ignore-case t)
   ;; start git grep for whole repo
