@@ -50,6 +50,7 @@ values."
      html
      ;; ycmd
      c-c++
+     ess
      ;; (c-c++ :variables c-c++-enable-clang-support t)
      git
      gtags
