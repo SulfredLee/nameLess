@@ -145,6 +145,9 @@ openssl: .openssl
 	echo "export PATH=/usr/local/global/6.6.2/bin:\$$PATH" >> ~/.bashrc
 	touch $@
 
+# If you fail when sudo apt-get build-dep emacs24, you may install it by aptitude
+# sudo apt-get install aptitude
+# sudo aptitude build-dep emacs24
 .emacs:
 	if [ ! -e emacs-26.1.tar.gz ]; \
 	then \
