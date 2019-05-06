@@ -15,8 +15,6 @@ rm ${buildPath}/cscope.po.out
 # make tags
 echo "######### make GTag"
 gtags
-echo "######### prepare clang"
-/home/sulfred/Documents/bin/prepareClang.sh
 echo "######### make cscope"
 find . -name "*.cc" -o -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" > cscope.files
 cscope -q -R -b -k -i cscope.files
