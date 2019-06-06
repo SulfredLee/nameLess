@@ -149,18 +149,18 @@ openssl: .openssl
 # sudo apt-get install aptitude
 # sudo aptitude build-dep emacs24
 .emacs:
-	if [ ! -e emacs-26.1.tar.gz ]; \
+	if [ ! -e emacs-26.2.tar.gz ]; \
 	then \
-		wget https://ftp.gnu.org/gnu/emacs/emacs-26.1.tar.gz; \
+		wget https://ftp.gnu.org/gnu/emacs/emacs-26.2.tar.gz; \
 	fi;
-	tar zxf emacs-26.1.tar.gz
-	sudo apt-get build-dep emacs24
-	sudo mkdir -p /usr/local/emacs/26.1
-	cd emacs-26.1; \
-	./configure --prefix=/usr/local/emacs/26.1; \
+	tar zxf emacs-26.2.tar.gz
+	sudo apt-get build-dep emacs25
+	sudo mkdir -p /usr/local/emacs/26.2
+	cd emacs-26.2; \
+	./configure --prefix=/usr/local/emacs/26.2; \
 	make -j 4; \
 	sudo make install;
-	echo "export PATH=/usr/local/emacs/26.1/bin:\$$PATH" >> ~/.bashrc
+	echo "export PATH=/usr/local/emacs/26.2/bin:\$$PATH" >> ~/.bashrc
 	touch $@
 
 .ninja:
