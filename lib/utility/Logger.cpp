@@ -32,6 +32,13 @@ Logger& Logger::GetInstance()
     return instance;
 }
 
+Logger& Logger::GetInstance_ResetSS(LogLevel logLevel)
+{
+    Logger& logger =  GetInstance();
+    logger.ResetSS(logLevel);
+    return logger;
+}
+
 void Logger::InitComponent(const Logger::LoggerConfig& config)
 {
     DefaultLock lock(&m_DefaultMutex);
@@ -60,24 +67,20 @@ void Logger::Log(LogLevel logLevel, const char* format, ...)
     vsnprintf(dest, destLen, format, args);
     va_end(args);
 
-    std::stringstream ss;
-    ss << GetCurrentTime() << " [" << GetLogLevelName(logLevel) << "] " << dest;
-    m_config.fileSize += ss.str().length();
-
-    if (m_config.isToFile && OpenLogFile())
-    {
-        m_outFH << ss.str() << std::endl;
-    }
-
-    if (m_config.isToConsole)
-    {
-        std::cout << ss.str() << std::endl;
-    }
+    LogImplement(dest, 5120, logLevel, true);
 }
 
 void Logger::AddClassName(std::string className, void* object)
 {
     m_classNameMap.insert(std::make_pair(object, className));
+}
+
+void Logger::ResetSS(LogLevel logLevel)
+{
+    DefaultLock lock(&m_DefaultMutex);
+
+    char dest[1024];
+    LogImplement(dest, 0, logLevel, true);
 }
 
 std::string Logger::GetClassName(void* object, std::string prettyFunction)
@@ -167,6 +170,26 @@ bool Logger::OpenLogFile()
         {
             return false;
         }
+    }
+}
+
+void Logger::LogImplement(char dest[], int size, LogLevel logLevel, bool useTimeStamp)
+{
+    std::stringstream ss;
+    if (useTimeStamp)
+        ss << GetCurrentTime() << " [" << GetLogLevelName(logLevel) << "] ";
+    if (size != 0)
+        ss <<  dest;
+    m_config.fileSize += ss.str().length();
+
+    if (m_config.isToFile && OpenLogFile())
+    {
+        m_outFH << ss.str();
+    }
+
+    if (m_config.isToConsole)
+    {
+        std::cout << ss.str();
     }
 }
 
