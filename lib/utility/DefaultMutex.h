@@ -10,6 +10,7 @@ class DefaultMutex
 
     void Lock();
     void Unlock();
+    pthread_mutex_t* GetMutex();
  private:
     pthread_mutexattr_t m_Attr;
     pthread_mutex_t m_Mutex;

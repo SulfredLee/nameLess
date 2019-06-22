@@ -2,6 +2,7 @@
 
 CriticalSection::CriticalSection()
 {
+    pthread_mutexattr_init(&m_Attr);
     pthread_mutexattr_settype(&m_Attr, PTHREAD_MUTEX_RECURSIVE);
     pthread_mutex_init(&m_Mutex, &m_Attr);
 }

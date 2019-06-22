@@ -22,6 +22,11 @@ void DefaultMutex::Unlock()
     pthread_mutex_unlock(&m_Mutex);
 }
 
+pthread_mutex_t* DefaultMutex::GetMutex()
+{
+    return &m_Mutex;
+}
+
 DefaultLock::DefaultLock(DefaultMutex* pDefaultMutex)
 {
     m_pDefaultMutex = pDefaultMutex;
