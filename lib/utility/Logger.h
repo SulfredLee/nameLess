@@ -8,7 +8,6 @@
 #include <sys/syscall.h>
 
 #include "DefaultMutex.h"
-#include "Tools.h"
 
 class Logger
 {
@@ -55,7 +54,7 @@ class Logger
     do{                                                     \
         char buffer[5120];                                   \
         snprintf(buffer, sizeof(buffer), __VA_ARGS__);      \
-        Logger::GetInstance().Log(level, "%25s,%25s:%6d,%6d,%25s,%s", Utility::GetFileName(__FILE__).c_str(), __FUNCTION__, __LINE__, syscall(SYS_gettid), Logger::GetInstance().GetClassName(this, __PRETTY_FUNCTION__).c_str(), buffer); \
+        Logger::GetInstance().Log(level, "%25s,%25s:%6d,%6d,%25s,%s", Logger::GetFileName(__FILE__).c_str(), __FUNCTION__, __LINE__, syscall(SYS_gettid), Logger::GetInstance().GetClassName(this, __PRETTY_FUNCTION__).c_str(), buffer); \
     }while(0)
 
 #define LOGMSG_DEBUG(...) __LOGMSG(Logger::LogLevel::DEBUG, __VA_ARGS__)
