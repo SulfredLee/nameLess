@@ -19,9 +19,9 @@ class DefaultMutex
 class DefaultLock
 {
  public:
-    DefaultLock(DefaultMutex* pDefaultMutex);
+    DefaultLock(DefaultMutex& defaultMutex);
     ~DefaultLock();
  private:
-    DefaultMutex* m_pDefaultMutex;
+    DefaultMutex& m_defaultMutex;
 };
 #endif

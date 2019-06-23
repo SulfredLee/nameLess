@@ -27,13 +27,12 @@ pthread_mutex_t* DefaultMutex::GetMutex()
     return &m_Mutex;
 }
 
-DefaultLock::DefaultLock(DefaultMutex* pDefaultMutex)
+DefaultLock::DefaultLock(DefaultMutex& defaultMutex) : m_defaultMutex(defaultMutex)
 {
-    m_pDefaultMutex = pDefaultMutex;
-    m_pDefaultMutex->Lock();
+    m_defaultMutex.Lock();
 }
 
 DefaultLock::~DefaultLock()
 {
-    m_pDefaultMutex->Unlock();
+    m_defaultMutex.Unlock();
 }

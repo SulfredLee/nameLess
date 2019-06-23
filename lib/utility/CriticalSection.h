@@ -18,9 +18,9 @@ class CriticalSection
 class CriticalLock
 {
  public:
-    CriticalLock(CriticalSection* pSection);
+    CriticalLock(CriticalSection& section);
     ~CriticalLock();
  private:
-    CriticalSection* m_pSection;
+    CriticalSection& m_section;
 };
 #endif

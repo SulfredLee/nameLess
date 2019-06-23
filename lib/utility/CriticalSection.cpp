@@ -22,13 +22,12 @@ void CriticalSection::Unlock()
     pthread_mutex_unlock(&m_Mutex);
 }
 
-CriticalLock::CriticalLock(CriticalSection* pSection)
+CriticalLock::CriticalLock(CriticalSection& section) : m_section(section)
 {
-    m_pSection = pSection;
-    m_pSection->Lock();
+    m_section.Lock();
 }
 
 CriticalLock::~CriticalLock()
 {
-    m_pSection->Unlock();
+    m_section.Unlock();
 }
