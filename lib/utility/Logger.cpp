@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 #include <stdarg.h>     /* va_list, va_start, va_arg, va_end */
 #include <string.h>
@@ -32,10 +33,10 @@ Logger& Logger::GetInstance()
     return instance;
 }
 
-Logger& Logger::GetInstance_ResetSS(LogLevel logLevel)
+Logger& Logger::GetInstance_ResetSS(LogLevel logLevel, void *logObject, std::string functionName, int lineNumber)
 {
     Logger& logger =  GetInstance();
-    logger.ResetSS(logLevel);
+    logger.ResetSS(logLevel, logObject, functionName, lineNumber);
     return logger;
 }
 
@@ -67,7 +68,19 @@ void Logger::Log(LogLevel logLevel, const char* format, ...)
     vsnprintf(dest, destLen, format, args);
     va_end(args);
 
-    LogImplement(dest, 5120, logLevel, true);
+    std::stringstream ss;
+    ss << GetCurrentTime() << " [" << GetLogLevelName(logLevel) << "] " << dest;
+    m_config.fileSize += ss.str().length();
+
+    if (m_config.isToFile && OpenLogFile())
+    {
+        m_outFH << ss.str();
+    }
+
+    if (m_config.isToConsole)
+    {
+        std::cout << ss.str();
+    }
 }
 
 void Logger::AddClassName(std::string className, void* object)
@@ -75,12 +88,34 @@ void Logger::AddClassName(std::string className, void* object)
     m_classNameMap.insert(std::make_pair(object, className));
 }
 
-void Logger::ResetSS(LogLevel logLevel)
+void Logger::ResetSS(LogLevel logLevel, void *logObject, const std::string& functionName, int lineNumber)
 {
     DefaultLock lock(&m_DefaultMutex);
 
-    char dest[1024];
-    LogImplement(dest, 0, logLevel, true);
+    m_oneTimeLevel = logLevel;
+    if (logLevel < m_config.logLevel)
+    {
+        return;
+    }
+
+    std::stringstream ss;
+    ss << GetCurrentTime() << " [" << GetLogLevelName(logLevel) << "] ";
+    if (logObject)
+        ss << std::setw(25) << std::setfill(' ') << Logger::GetInstance().GetClassName(logObject, __PRETTY_FUNCTION__) << "::";
+    ss << std::setw(25) << std::setfill(' ') << functionName << ":"
+       << std::setw(6) << std::setfill(' ') << lineNumber << ","
+       << std::setw(6) << std::setfill(' ') << syscall(SYS_gettid) << ",";
+    m_config.fileSize += ss.str().length();
+
+    if (m_config.isToFile && OpenLogFile())
+    {
+        m_outFH << ss.str();
+    }
+
+    if (m_config.isToConsole)
+    {
+        std::cout << ss.str();
+    }
 }
 
 std::string Logger::GetClassName(void* object, std::string prettyFunction)
@@ -124,13 +159,13 @@ std::string Logger::GetLogLevelName(LogLevel logLevel)
     switch (logLevel)
     {
         case Logger::LogLevel::DEBUG:
-            return "DEBUG";
+            return "DBG";
         case Logger::LogLevel::WARN:
-            return " WARN";
+            return "WRN";
         case Logger::LogLevel::INFO:
-            return " INFO";
+            return "MSG";
         case Logger::LogLevel::ERROR:
-            return "ERROR";
+            return "ERR";
         default:
             return std::string();
     }
@@ -173,11 +208,17 @@ bool Logger::OpenLogFile()
     }
 }
 
-void Logger::LogImplement(char dest[], int size, LogLevel logLevel, bool useTimeStamp)
+void Logger::LogImplement(char dest[], int size, LogLevel logLevel, bool useTimeStamp, bool printLogLocation, void *logObject)
 {
     std::stringstream ss;
     if (useTimeStamp)
         ss << GetCurrentTime() << " [" << GetLogLevelName(logLevel) << "] ";
+    if (printLogLocation && logObject)
+        ss << std::setw(25) << std::setfill(' ') << Logger::GetInstance().GetClassName(logObject, __PRETTY_FUNCTION__) << "::";
+    if (printLogLocation)
+        ss << std::setw(25) << std::setfill(' ') << __FUNCTION__ << ":"
+           << std::setw(6) << std::setfill(' ') << __LINE__ << ","
+           << std::setw(6) << std::setfill(' ') << syscall(SYS_gettid) << ",";
     if (size != 0)
         ss <<  dest;
     m_config.fileSize += ss.str().length();

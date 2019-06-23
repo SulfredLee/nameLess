@@ -21,7 +21,7 @@ class Logger
     public:
         LoggerConfig()
         {
-            logLevel = Logger::LogLevel::DEBUG;
+            logLevel = Logger::LogLevel::WARN;
             logPath = ".";
             fileSize = 0;
             fileSizeLimit = 4 * 1024 * 1024; // 4 MByte
@@ -42,14 +42,14 @@ class Logger
     ~Logger();
 
     static Logger& GetInstance();
-    static Logger& GetInstance_ResetSS(LogLevel logLevel);
+    static Logger& GetInstance_ResetSS(LogLevel logLevel, void *logObject, std::string functionName, int lineNumber);
     static std::string GetFileName(const std::string& fillPath);
 
     void InitComponent(const LoggerConfig& config);
     LoggerConfig GetConfig();
     void Log(LogLevel logLevel, const char* format, ...);
     void AddClassName(std::string className, void* object);
-    void ResetSS(LogLevel logLevel);
+    void ResetSS(LogLevel logLevel, void *logObject, const std::string& functionName, int lineNumber);
     std::string GetClassName(void* object, std::string prettyFunction);
     // Logger& operator<< (endl_type endl)
     // {
@@ -60,6 +60,11 @@ class Logger
         Logger& operator<< (const T& data)
     {
         DefaultLock lock(&m_DefaultMutex);
+
+        if (m_oneTimeLevel < m_config.logLevel)
+        {
+            return *this;
+        }
 
         std::stringstream ss;
         ss << data;
@@ -80,7 +85,7 @@ class Logger
  private:
     LoggerConfig m_config;
     std::ofstream m_outFH;
-    std::stringstream m_SS;
+    LogLevel m_oneTimeLevel;
     DefaultMutex m_DefaultMutex;
     std::map<void*, std::string> m_classNameMap; // key: object address, object class name
  private:
@@ -92,7 +97,7 @@ class Logger
     std::string GetLogLevelName(LogLevel logLevel);
     std::string _GetClassName(const std::string& prettyFunction);
     bool OpenLogFile();
-    void LogImplement(char dest[], int size, LogLevel logLevel, bool useTimeStamp);
+    void LogImplement(char dest[], int size, LogLevel logLevel, bool useTimeStamp, bool printLogLocation, void *logObject);
 };
 
 #define __LOGMSG(level, ...)                                  \
@@ -108,18 +113,22 @@ class Logger
         Logger::GetInstance().Log(level, "%25s:%6d,%6d,%s", __FUNCTION__, __LINE__, syscall(SYS_gettid), buffer); \
     }while(0)
 
-#define LOGMSG_DEBUG(...) __LOGMSG(Logger::LogLevel::DEBUG, __VA_ARGS__)
-#define LOGMSG_INFO(...)  __LOGMSG(Logger::LogLevel::INFO, __VA_ARGS__)
-#define LOGMSG_WARN(...)  __LOGMSG(Logger::LogLevel::WARN, __VA_ARGS__)
-#define LOGMSG_ERROR(...) __LOGMSG(Logger::LogLevel::ERROR, __VA_ARGS__)
-#define LOGMSG_DEBUG_C(...) __LOGMSG_C(Logger::LogLevel::DEBUG, __VA_ARGS__)
-#define LOGMSG_INFO_C(...)  __LOGMSG_C(Logger::LogLevel::INFO, __VA_ARGS__)
-#define LOGMSG_WARN_C(...)  __LOGMSG_C(Logger::LogLevel::WARN, __VA_ARGS__)
-#define LOGMSG_ERROR_C(...) __LOGMSG_C(Logger::LogLevel::ERROR, __VA_ARGS__)
-#define LOGMSG_DEBUG_S() Logger::GetInstance_ResetSS(Logger::LogLevel::DEBUG)
-#define LOGMSG_INFO_S() Logger::GetInstance_ResetSS(Logger::LogLevel::INFO)
-#define LOGMSG_WARN_S() Logger::GetInstance_ResetSS(Logger::LogLevel::WARN)
-#define LOGMSG_ERROR_S() Logger::GetInstance_ResetSS(Logger::LogLevel::ERROR)
+#define LOGMSG_DBG(...) __LOGMSG(Logger::LogLevel::DEBUG, __VA_ARGS__)
+#define LOGMSG_MSG(...)  __LOGMSG(Logger::LogLevel::INFO, __VA_ARGS__)
+#define LOGMSG_WRN(...)  __LOGMSG(Logger::LogLevel::WARN, __VA_ARGS__)
+#define LOGMSG_ERR(...) __LOGMSG(Logger::LogLevel::ERROR, __VA_ARGS__)
+#define LOGMSG_DBG_C(...) __LOGMSG_C(Logger::LogLevel::DEBUG, __VA_ARGS__)
+#define LOGMSG_MSG_C(...)  __LOGMSG_C(Logger::LogLevel::INFO, __VA_ARGS__)
+#define LOGMSG_WRN_C(...)  __LOGMSG_C(Logger::LogLevel::WARN, __VA_ARGS__)
+#define LOGMSG_ERR_C(...) __LOGMSG_C(Logger::LogLevel::ERROR, __VA_ARGS__)
+#define LOGMSG_DBG_S() Logger::GetInstance_ResetSS(Logger::LogLevel::DEBUG, this, __FUNCTION__, __LINE__)
+#define LOGMSG_MSG_S() Logger::GetInstance_ResetSS(Logger::LogLevel::INFO, this, __FUNCTION__, __LINE__)
+#define LOGMSG_WRN_S() Logger::GetInstance_ResetSS(Logger::LogLevel::WARN, this, __FUNCTION__, __LINE__)
+#define LOGMSG_ERR_S() Logger::GetInstance_ResetSS(Logger::LogLevel::ERROR, this, __FUNCTION__, __LINE__)
+#define LOGMSG_DBG_S_C() Logger::GetInstance_ResetSS(Logger::LogLevel::DEBUG, NULL, __FUNCTION__, __LINE__)
+#define LOGMSG_MSG_S_C() Logger::GetInstance_ResetSS(Logger::LogLevel::INFO, NULL, __FUNCTION__, __LINE__)
+#define LOGMSG_WRN_S_C() Logger::GetInstance_ResetSS(Logger::LogLevel::WARN, NULL, __FUNCTION__, __LINE__)
+#define LOGMSG_ERR_S_C() Logger::GetInstance_ResetSS(Logger::LogLevel::ERROR, NULL, __FUNCTION__, __LINE__)
 #define LOGMSG_CLASS_NAME(className) Logger::GetInstance().AddClassName(className, this)
 #define LOGMSG_INIT(config) Logger::GetInstance().InitComponent(config)
 
