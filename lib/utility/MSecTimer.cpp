@@ -4,6 +4,7 @@
 MSecTimer::~MSecTimer(){
     m_bTimerThreadStop = true;
     m_bTimerThreadExit = true;
+    m_waitCond.Signal();
     m_TimerThread.join();
 }
 
@@ -13,14 +14,14 @@ void MSecTimer::Start(){
 
 void MSecTimer::Stop(){
     m_bTimerThreadStop = true;
+    m_waitCond.Signal();
 }
 
 void MSecTimer::Main(){
     int sleepDurationMSec = m_unDuration * 1000;
-    // clock_t begin_time = clock();
     while (!m_bTimerThreadExit)
     {
-        usleep(sleepDurationMSec);
+        m_waitCond.WaitWithTime(sleepDurationMSec);
         if (!m_bTimerThreadStop)
         {
             m_fn();

@@ -8,6 +8,7 @@
 
 #include <time.h>
 
+#include "LinuxCond.h"
 class MSecTimer{
 public:
     template <class Fn, class... Args>
@@ -22,8 +23,9 @@ private:
     std::thread m_TimerThread;
     std::atomic<bool> m_bTimerThreadExit;
     std::atomic<bool> m_bTimerThreadStop;
-    std::function<void()> m_fn;
     unsigned int m_unDuration;
+    std::function<void()> m_fn;
+    LinuxCond m_waitCond;
 };
 
 template <class Fn, class... Args>
