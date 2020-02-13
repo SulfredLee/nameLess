@@ -349,6 +349,7 @@ you should place your code here."
     "gg" 'my-helm-grep-do-git-grep
     "fn" 'find-name-dired)
   (add-to-list 'auto-mode-alist '("\\.mq5$" . c++-mode))
+  (add-to-list 'auto-mode-alist '("\\.mq4$" . c++-mode))
   (add-to-list 'auto-mode-alist '("\\.mqh$" . c++-mode))
   )
 
