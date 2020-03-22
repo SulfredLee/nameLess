@@ -31,6 +31,7 @@ values."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(
+     octave
      graphviz
      csv
      php
@@ -45,7 +46,8 @@ values."
      (auto-completion :variables
                       auto-completion-enable-sort-by-usage t
                       auto-completion-enable-snippets-in-popup t)
-     ;; better-defaults
+     better-defaults
+     tabnine
      emacs-lisp
      javascript
      html

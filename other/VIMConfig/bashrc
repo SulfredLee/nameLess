@@ -117,4 +117,14 @@ if ! shopt -oq posix; then
 fi
 
 export PATH=/home/sulfred/Documents/bin:$PATH
+export PATH=/home/sulfred/MATLAB/R2018a/bin:$PATH
 alias openFolder=nautilus
+
+# NVIDIA CUDA Toolkit
+export PATH=/usr/local/cuda-10.0/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-10.0/lib64:$LD_LIBRARY_PATH
+
+# Convert subtitle
+export PATH=/usr/local/OpenCC/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/OpenCC/lib:$LD_LIBRARY_PATH
+export PATH=/usr/local/emacs/26.3/bin:$PATH
