@@ -30,7 +30,7 @@ J = nonreg + reg;
 
 % Part 1.3
 grad = (X' * Herr) / m;
-grad(2:end) +=  lambda * regTheta / m;
+grad(2:end) = grad(2:end) + lambda * regTheta / m;
  
 % =========================================================================
  	

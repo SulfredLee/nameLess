@@ -42,7 +42,7 @@ Theta_grad = zeros(size(Theta));
 
 err = (X*Theta') - Y;
 M = err.^2;
-reg = (lambda / 2) * (sum(sumsq(Theta)) + sum(sumsq(X)));
+reg = (lambda / 2) * (sum(sumsqr(Theta)) + sum(sumsqr(X)));
 J = sum(sum(R.*M))/2 + reg;
 
 X_grad = (err .* R) * Theta + (lambda * X);

@@ -45,7 +45,9 @@ Theta2_grad = zeros(size(Theta2));
 % y has size 5000 x 1
 K = num_labels;
 
-Y = eye(K)(y,:); % [5000, 10]
+%Y = eye(K)(y,:); % [5000, 10]
+Y = eye(K); % convert to matlab code
+Y = Y(y,:);
 
 % Part 1
 a1 = [ones(m, 1), X]; % results in [5000, 401]
@@ -62,7 +64,7 @@ J = (1/m) * sum(cost(:));
 % Part 1.4 regularization
 Theta1Filtered = Theta1(:,2:end);
 Theta2Filtered = Theta2(:,2:end);
-reg = (lambda / (2*m)) * (sumsq(Theta1Filtered(:)) + sumsq(Theta2Filtered(:)));
+reg = (lambda / (2*m)) * (sumsqr(Theta1Filtered(:)) + sumsqr(Theta2Filtered(:)));
 J = J + reg;
 
 % Part 2: Implement the backpropagation algorithm to compute the gradients
@@ -104,7 +106,7 @@ for t = 1:m
 	% step 4
 	Delta2 = Delta2 + (d3 * a2');
 	Delta1 = Delta1 + (d2 * a1');
-endfor
+end
 
 %step 5
 % Delta1 = [25, 401]
