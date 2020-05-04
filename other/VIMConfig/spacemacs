@@ -47,7 +47,7 @@ values."
                       auto-completion-enable-sort-by-usage t
                       auto-completion-enable-snippets-in-popup t)
      better-defaults
-     tabnine
+     ;; tabnine
      emacs-lisp
      javascript
      html
@@ -353,6 +353,9 @@ you should place your code here."
   (add-to-list 'auto-mode-alist '("\\.mq5$" . c++-mode))
   (add-to-list 'auto-mode-alist '("\\.mq4$" . c++-mode))
   (add-to-list 'auto-mode-alist '("\\.mqh$" . c++-mode))
+  ;; handle tern for javascript auto complete
+  (add-to-list 'load-path "/home/sulfred/.emacs.d/private/tern/emacs")
+  (autoload 'tern-mode "tern.el" nil t)
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
